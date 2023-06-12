@@ -1,5 +1,8 @@
 from setuptools import setup
 
+with open('requirements.txt') as f:
+    required = f.read().splitlines()
+
 setup(
     name='ong_gesfincas',
     version='0.0.1',
@@ -9,5 +12,6 @@ setup(
     author='Oscar Neira',
     author_email='oneirag@yahoo.es',
     description='Macro simple que fusiona en dos tablas (una para ingresos y otra para gastos) todas las liquidaciones de varias fincas de gesfincas',
-    scripts = ['liquidaciones/liquidaciones.py'],
+    scripts=['liquidaciones/liquidaciones.py'],
+    install_requires=required,
 )
