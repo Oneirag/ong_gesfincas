@@ -12,6 +12,10 @@ setup(
     author='Oscar Neira',
     author_email='oneirag@yahoo.es',
     description='Macro simple que fusiona en dos tablas (una para ingresos y otra para gastos) todas las liquidaciones de varias fincas de gesfincas',
-    scripts=['liquidaciones/liquidaciones'],
+    entry_points={
+            'console_scripts': [
+                'liquidaciones = liquidaciones.liquidaciones_gui:main',
+            ]
+        },
     install_requires=required,
 )

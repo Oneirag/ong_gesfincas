@@ -59,6 +59,8 @@ def main(in_file: str, out_file:str):
 
 
 if __name__ == '__main__':
+
+
     # path = "/Users/oneirag/Downloads/punteo"
     in_file = "VERSION CASI LIQUIDACIONES.xlsx"
     out_file = "salida.xlsx"
@@ -67,5 +69,4 @@ if __name__ == '__main__':
     if not os.path.isfile(in_file):
         raise FileNotFoundError(f"El fichero de entrada {in_file} no existe. Pruebe a indicar el path completo")
     main(in_file, out_file)
-
 
