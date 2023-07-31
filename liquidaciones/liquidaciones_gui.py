@@ -2,7 +2,7 @@ import pandas as pd
 from tkinter import *
 from tkinter import filedialog
 from tkinter import messagebox as msg
-from .liquidaciones_cmd import main as main_liquidaciones
+from liquidaciones.liquidaciones_cmd import main as main_liquidaciones
 
 
 class LiquidacionesApp:
@@ -67,6 +67,7 @@ class LiquidacionesApp:
                                        f"y creado el fichero '{out_filename}'")
         except Exception as e:
             msg.showerror("Error interno", f"Error {e} procesando el fcihero {self.file_name}")
+
 
 def main():
     # Driver Code

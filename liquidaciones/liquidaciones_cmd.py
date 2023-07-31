@@ -13,23 +13,22 @@ def process_df(df, start_idx, end_idx, finca):
     return res, tipo
 
 
-def main(in_file: str, out_file:str):
+def read_gesfincas(gesfincas_file: str) -> tuple:
     """
-    Processes a gesfincas settlement file to merge into a single file
-    :param in_file: name (or full path) of the file (xlsx)
-    :param out_file: name (or full path) of the output file (xlsx)
-    :return:
-    """
+    Process a gesfincas file and returns a tuple with two dataframes: one for expenses and other for incomes
+    Args:
+        gesfincas_file: full name of the gesfincas file
 
-    ingresos = []
-    gastos = []
-    # xls = pd.ExcelFile(os.path.join(path, in_file))
-    xls = pd.ExcelFile(in_file)
-    for sheet_name in xls.sheet_names[:-1]:     # la ultima es un resumen
+    Returns:
+        a tuple with df_expenses, df_incomes
+    """
+    incomes = []
+    expenses = []
+    xls = pd.ExcelFile(gesfincas_file)
+    for sheet_name in xls.sheet_names[:-1]:     # Last one is just a summary
         # print(sheet_name)
         df = pd.read_excel(xls, sheet_name=sheet_name, skiprows=7, header=None)
         finca = df.iat[0, 0]
-
         try:
             empty_row = df[df.isna().all(axis=1)].index[0]
         except IndexError:
@@ -44,14 +43,24 @@ def main(in_file: str, out_file:str):
         for df, tipo in (df1, tipo1), (df2, tipo2):
             if tipo:
                 if tipo == "DETALLE DE INGRESOS (COBRO)":
-                    ingresos.append(df)
+                    incomes.append(df)
                 elif tipo == "DETALLE DE GASTOS (PAGOS)":
-                    gastos.append(df)
+                    expenses.append(df)
+    if not expenses or not incomes:
+        return None, None
+    df_gastos = pd.concat(expenses)
+    df_incomes = pd.concat(incomes)
+    return df_gastos, df_incomes
 
-    df_gastos = pd.concat(gastos)
-    df_ingresos = pd.concat(ingresos)
 
-    # out_xls = pd.ExcelWriter(os.path.join(path, out_file))
+def main(in_file: str, out_file:str):
+    """
+    Processes a gesfincas settlement file to merge into a single file
+    :param in_file: name (or full path) of the file (xlsx)
+    :param out_file: name (or full path) of the output file (xlsx)
+    :return:
+    """
+    df_gastos, df_ingresos = read_gesfincas(in_file)
     out_xls = pd.ExcelWriter(out_file)
     df_gastos.to_excel(out_xls, sheet_name="gastos", index=False)
     df_ingresos.to_excel(out_xls, sheet_name="ingresos", index=False)
@@ -60,12 +69,11 @@ def main(in_file: str, out_file:str):
 
 if __name__ == '__main__':
 
-
     # path = "/Users/oneirag/Downloads/punteo"
     in_file = "VERSION CASI LIQUIDACIONES.xlsx"
     out_file = "salida.xlsx"
-    in_file = input(f"Elija el fichero de entrada [{in_file}") or in_file
-    out_file = input(f"Elija el fichero de salida [{out_file}") or out_file
+    in_file = input(f"Elija el fichero de entrada [{in_file}]: ") or in_file
+    out_file = input(f"Elija el fichero de salida [{out_file}]: ") or out_file
     if not os.path.isfile(in_file):
         raise FileNotFoundError(f"El fichero de entrada {in_file} no existe. Pruebe a indicar el path completo")
     main(in_file, out_file)
