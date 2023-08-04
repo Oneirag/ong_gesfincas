@@ -133,15 +133,25 @@ class ConciliationApp(Frame):
         self.main.config(menu=main_menu)
 
         file_menu = Menu(main_menu, tearoff=False)
-        file_menu.add_command(label="Procesar fichero de gesfincas", command=self.handle_gesfincas)
-        file_menu.add_command(label="Procesar extracto del banco", command=self.handle_bank_data)
+        main_menu.add_cascade(label="Archivo", menu=file_menu)
+
+        load_menu = Menu(file_menu, tearoff=False)
+        file_menu.add_cascade(label="Cargar datos nuevos", menu=load_menu)
+        load_menu.add_command(label="Fichero de gesfincas", command=lambda: self.handle_gesfincas(update=False))
+        load_menu.add_command(label="Extracto del banco", command=lambda: self.handle_bank_data(update=False))
+        load_menu.add_command(label="Excel completo", command=lambda: self.handle_read_excel(update=False))
         file_menu.add_separator()
-        file_menu.add_command(label="Leer Excel", command=lambda: self.handle_read_excel(update=False))
-        file_menu.add_command(label="Actualizar desde Excel", command=lambda: self.handle_read_excel(update=True))
-        file_menu.add_command(label="Guardar Excel", command=self.handle_save_to_excel)
+
+        update_menu = Menu(file_menu, tearoff=False)
+        file_menu.add_cascade(label="Actualizar con datos nuevos", menu=load_menu)
+        update_menu.add_command(label="Fichero de gesfincas", command=lambda: self.handle_gesfincas(update=True))
+        update_menu.add_command(label="Extracto del banco", command=lambda: self.handle_bank_data(update=True))
+        update_menu.add_command(label="Excel completo", command=lambda: self.handle_read_excel(update=True))
+        file_menu.add_separator()
+
+        file_menu.add_command(label="Guardar Excel completo", command=self.handle_save_to_excel)
         file_menu.add_separator()
         file_menu.add_command(label="Salir", command=self.exit_application)
-        main_menu.add_cascade(label="Archivo", menu=file_menu)
 
         bucket_menu = Menu(main_menu, tearoff=False)
         bucket_menu.add_command(label="Conciliar automáticamente", command=self.handle_auto_conciliation)
@@ -151,19 +161,25 @@ class ConciliationApp(Frame):
         view_menu.add_command(label="Redibujar las tablas", command=self.redraw_all_tables)
         main_menu.add_cascade(label="Vista (pruebas)", menu=view_menu)
 
-    def handle_bank_data(self):
+    def handle_bank_data(self, update=False):
         bank_file = ask_excel_filename()
         if bank_file:
             df_bank = self.conciliation.read_bank(bank_file)
             if df_bank is None:
                 messagebox.showerror(message="El fichero seleccionado no tiene datos del banco en su primera hoja")
             else:
-                self.conciliation.set_dfs({DataType.BNK: df_bank}, read_buckets=False)
+                df_dict = {DataType.BNK: df_bank}
+                if update and self.conciliation.df_bank is not None:
+                    self.conciliation.update_dfs(df_dict)
+                else:
+                    if update:
+                        messagebox.showinfo(message="No hay datos del banco, se cargarán nuevos sin actualizar")
+                    self.conciliation.set_dfs(df_dict, read_buckets=False)
                 self.create_tables()
                 self.redraw_all_tables()
         pass
 
-    def handle_gesfincas(self):
+    def handle_gesfincas(self, update=False):
         gesfincas_file = ask_excel_filename()
         if gesfincas_file:
             df_expenses, df_incomes = read_gesfincas(gesfincas_file)
@@ -175,7 +191,12 @@ class ConciliationApp(Frame):
             # Reset index
             for df in dict_df.values():
                 df.index = range(df.shape[0])
-            self.conciliation.set_dfs(dict_df, read_buckets=False)
+            if update and (self.conciliation.df_expenses is not None and self.conciliation.df_incomes is not None):
+                if update:
+                    messagebox.showinfo(message="No hay datos de gastos o ingresos, se cargarán nuevos sin actualizar")
+                self.conciliation.update_dfs(dict_df)
+            else:
+                self.conciliation.set_dfs(dict_df, read_buckets=False)
             self.create_tables()
             self.redraw_all_tables()
 
