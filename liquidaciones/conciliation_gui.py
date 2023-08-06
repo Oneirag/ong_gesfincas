@@ -203,7 +203,7 @@ class ConciliationApp(Frame):
         for df in df_dict.values():
             df.index = range(df.shape[0])
         # Check if there was previous data
-        previous_data = any(self.conciliation.dfs[key] is not None for key in df_dict.keys())
+        previous_data = any(self.conciliation.dfs.get(key) is not None for key in df_dict.keys())
         previous_data_str = ", ".join(k.value for k in df_dict.keys())
 
         if update:
