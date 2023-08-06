@@ -11,11 +11,14 @@ setup(
     license='',
     author='Oscar Neira',
     author_email='oneirag@yahoo.es',
-    description='Macro simple que fusiona en dos tablas (una para ingresos y otra para gastos) todas las liquidaciones de varias fincas de gesfincas',
+    description=('Macro para procesar ficheros de gesfincas (fusionando los datos de varias fincas que vienen en hojas '
+                 'separadas en dos hojas, una para ingresos y otra para gastos) y otra macro que crea una ventana con '
+                 'la que puntear los datos del banco contra los datos anteriores'),
     entry_points={
             'console_scripts': [
-                'liquidaciones = liquidaciones.liquidaciones_gui:main',
-            ]
+                'liquidaciones=liquidaciones.liquidaciones_gui:main',
+                'punteo=liquidaciones.conciliation_gui:main',
+            ],
         },
     install_requires=required,
 )

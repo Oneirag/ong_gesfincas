@@ -1,13 +1,13 @@
+import os
 from tkinter import *
 from tkinter import messagebox, filedialog
-import os
 
 import numpy as np
 import pandas as pd
-from conciliation_model import Conciliation
 from pandastable import TableModel
 
 from liquidaciones import DataType
+from liquidaciones.conciliation_model import Conciliation
 from liquidaciones.conciliation_pandastable import ConciliationTable
 from liquidaciones.liquidaciones_cmd import read_gesfincas
 
@@ -19,17 +19,28 @@ def ask_excel_filename(**kwargs):
 
 
 def check_missing_data(f):
+    """Decorator that checks if all data is available (bank, incomes and expenses) before executing a command.
+    If any is missing gives an informative message and cancels execution"""
+
     def wrapper(*args):
         self = args[0]
         if self.conciliation.has_all_data:
             return f(*args)
         else:
             messagebox.showinfo(message="Faltan datos para ejecutar la acción")
+
     return wrapper
 
 
 class ConciliationApp(Frame):
-    """Basic test frame for the table"""
+    """Main window for conciliation of bank, expenses and income data"""
+
+    # Values for self.var_show
+    _show_all = ""
+    _show_assigned = "asignados"
+    _show_unassigned = "no asignados"
+    # Color of the rows of the bucketed values
+    _color_bucketed = "lightgreen"
 
     def __init__(self, filename, parent=None):
         self.conciliation = Conciliation(filename)
@@ -39,23 +50,32 @@ class ConciliationApp(Frame):
 
         self.main = self.master
         # self.main.geometry('1000x800+200+100')
-        self.main.state('zoomed')  # MAximizes window
+        self.main.state('zoomed')  # Maximizes window
 
         # self.main.title('Table app')
-        self.main.title('Conciliation app')
+        self.main.title('Punteo de banco y datos de gesfincas')
 
         fr_btn = Frame(self.main)
         fr_btn.pack(fill=X, expand=1)
-        ###################
-        # Button to filter only unmatched
-        ###################
-        self.filter_unassigned = BooleanVar()
-        b = 0
-        self.chk_filter = Checkbutton(fr_btn, text="Ver solo no asignados", variable=self.filter_unassigned,
-                                      command=self.handle_filter_unassigned)
-        self.chk_filter.grid(row=0, column=b)
+        b = 0  # Column in the grid
         ###################
         # Radiobuttons to filter by a certain data table
+        ###################
+        self.lbl_show = Label(fr_btn, text="Mostrar:")
+        self.lbl_show.grid(row=0, column=b)
+        self.var_show = StringVar(value="")
+        self.radbtn_show = []
+        for text, data_type in [("Todos", self._show_all), ("Asignados", self._show_assigned),
+                                ("No asignados", self._show_unassigned), ]:
+            b += 1
+            radio_button_show = Radiobutton(fr_btn, variable=self.var_show, text=text,
+                                            command=self.handle_filter_unassigned, value=data_type,
+                                            tristatevalue="other")
+            self.radbtn_show.append(radio_button_show)
+            radio_button_show.grid(row=0, column=b)
+
+        ###################
+        # Radiobuttons to show all, bucketed or unbucketed
         ###################
         b += 1
         self.lbl_filter = Label(fr_btn, text="Filtrar por:")
@@ -153,13 +173,54 @@ class ConciliationApp(Frame):
         file_menu.add_separator()
         file_menu.add_command(label="Salir", command=self.exit_application)
 
+        # bucket_menu = MenuTooltip(main_menu)
         bucket_menu = Menu(main_menu, tearoff=False)
-        bucket_menu.add_command(label="Conciliar automáticamente", command=self.handle_auto_conciliation)
+
+        bucket_menu.add_command(label="Conciliar automáticamente", command=self.handle_auto_conciliation,
+                                # tooltip="\tIntenta puntea automáticamente los datos que no estén ya punteados"
+                                )
+
+        bucket_menu.add_command(label="Borrar punteos huérfanos", command=self.handle_remove_orphan,
+                                # tooltip="\tElimina los punteos que no están en más de una tabla"
+                                )
         main_menu.add_cascade(label="Conciliar", menu=bucket_menu)
 
-        view_menu = Menu(main_menu, tearoff=False)
-        view_menu.add_command(label="Redibujar las tablas", command=self.redraw_all_tables)
-        main_menu.add_cascade(label="Vista (pruebas)", menu=view_menu)
+        # view_menu = Menu(main_menu, tearoff=False)
+        # view_menu.add_command(label="Redibujar las tablas", command=self.redraw_all_tables)
+        # main_menu.add_cascade(label="Vista (pruebas)", menu=view_menu)
+
+    def load_or_update(self, df_dict: dict, update: bool):
+        """
+        Loads or updates a dict of dataframes indexed by DataType. Checks for previous data
+        Args:
+            df_dict: a dict of dataframes indexed by DataType
+            update: True if data is meant to be updated, False if data should be overwritten
+
+        Returns:
+            None
+        """
+        # Reset index
+        for df in df_dict.values():
+            df.index = range(df.shape[0])
+        # Check if there was previous data
+        previous_data = any(self.conciliation.dfs[key] is not None for key in df_dict.keys())
+        previous_data_str = ", ".join(k.value for k in df_dict.keys())
+
+        if update:
+            if previous_data:
+                self.conciliation.update_dfs(df_dict)
+            else:
+                messagebox.showinfo(message=f"No hay datos de {previous_data_str}, se cargarán nuevos sin actualizar")
+            self.conciliation.set_dfs(df_dict, read_buckets=False)
+        else:
+            if previous_data:
+                if not messagebox.askyesno(message=f"Hay cargados datos de {previous_data_str}. "
+                                                   f"¿Desea sobreescribirlos y perder el punteo previo?"):
+                    print("salir sin hacer nada")
+                    return
+            self.conciliation.set_dfs(df_dict, read_buckets=False)
+        self.create_tables()
+        self.redraw_all_tables()
 
     def handle_bank_data(self, update=False):
         bank_file = ask_excel_filename()
@@ -169,14 +230,7 @@ class ConciliationApp(Frame):
                 messagebox.showerror(message="El fichero seleccionado no tiene datos del banco en su primera hoja")
             else:
                 df_dict = {DataType.BNK: df_bank}
-                if update and self.conciliation.df_bank is not None:
-                    self.conciliation.update_dfs(df_dict)
-                else:
-                    if update:
-                        messagebox.showinfo(message="No hay datos del banco, se cargarán nuevos sin actualizar")
-                    self.conciliation.set_dfs(df_dict, read_buckets=False)
-                self.create_tables()
-                self.redraw_all_tables()
+                self.load_or_update(df_dict, update)
         pass
 
     def handle_gesfincas(self, update=False):
@@ -188,17 +242,13 @@ class ConciliationApp(Frame):
                 return
             # Now set both df to current conciliation
             dict_df = {DataType.INC: df_incomes, DataType.EXP: df_expenses}
-            # Reset index
-            for df in dict_df.values():
-                df.index = range(df.shape[0])
-            if update and (self.conciliation.df_expenses is not None and self.conciliation.df_incomes is not None):
-                if update:
-                    messagebox.showinfo(message="No hay datos de gastos o ingresos, se cargarán nuevos sin actualizar")
-                self.conciliation.update_dfs(dict_df)
-            else:
-                self.conciliation.set_dfs(dict_df, read_buckets=False)
-            self.create_tables()
-            self.redraw_all_tables()
+            self.load_or_update(dict_df, update)
+
+    @check_missing_data
+    def handle_remove_orphan(self):
+        self.conciliation.clear_orphan_buckets()
+        self.redraw_all_tables()
+        self.summary_refresh()
 
     @check_missing_data
     def handle_auto_conciliation(self):
@@ -209,17 +259,24 @@ class ConciliationApp(Frame):
                             for key, df in self.conciliation.dfs.items()}
         self.redraw_all_tables()
         self.summary_refresh()
-        message = "\n".join([f"Filas punteadas de {key1.value}: {value1} ({value1-value2} nuevas)"
-                            for (key1, value1), (key2, value2) in zip(new_conciliation.items(),
-                                                                      old_conciliation.items())])
+        message = "\n".join([f"Filas punteadas de {key1.value}: {value1} ({value1 - value2} nuevas)"
+                             for (key1, value1), (key2, value2) in zip(new_conciliation.items(),
+                                                                       old_conciliation.items())])
         messagebox.showinfo("Nuevo punteo", message)
 
     def handle_read_excel(self, update=False):
         file_path = ask_excel_filename()
+        existing_data = self.conciliation.has_all_data
         if file_path:
             if update:
-                self.conciliation.update(file_path)
+                if existing_data:
+                    self.conciliation.read(file_path)
+                else:
+                    self.conciliation.update(file_path)
             else:
+                if existing_data:
+                    if not messagebox.askyesno(message="Ya hay datos cargados. ¿Desea continuar y perder los cambios?"):
+                        return
                 self.conciliation.read(file_path)
         self.create_tables()
         for key, table in self.tables.items():
@@ -232,7 +289,7 @@ class ConciliationApp(Frame):
 
     @check_missing_data
     def handle_save_to_excel(self):
-        file_path = filedialog.asksaveasfilename(confirmoverwrite=False,    # It will be confirmed later
+        file_path = filedialog.asksaveasfilename(confirmoverwrite=False,  # It will be confirmed later
                                                  defaultextension=".xlsx", filetypes=[("Excel Files", "*.xlsx")])
 
         if not file_path:
@@ -356,13 +413,15 @@ class ConciliationApp(Frame):
             None
         """
         dict_dfs = dict_dfs or {}
-        only_free = self.filter_unassigned.get()
         for data_type in DataType:
             df = dict_dfs.get(data_type, self.conciliation.dfs.get(data_type, None))
             tbl = self.tables.get(data_type, None)
             if df is not None and tbl is not None:
-                if only_free:
+                var_show = self.var_show.get()
+                if var_show == self._show_unassigned:
                     df_paint = df[df[self.conciliation.col_bucket].isna()]
+                elif var_show == self._show_assigned:
+                    df_paint = df[~df[self.conciliation.col_bucket].isna()]
                 else:
                     df_paint = df
                 # Align left ("e") numeric dtypes and also bucket column
@@ -375,8 +434,12 @@ class ConciliationApp(Frame):
                 if auto_resize_cols:
                     tbl.autoResizeColumns()
                 tbl.set_df_redraw(df_paint)
-                mask = np.argwhere(~df_paint[self.conciliation.col_bucket].isna()).flatten().tolist()
-                tbl.setRowColors(mask, clr="#58D68D", cols="all")   # a light green
+                # Change color of the lines bucketed and reset color for the rest
+                colored = np.argwhere(~df_paint[self.conciliation.col_bucket].isna()).flatten().tolist()
+                not_colored = np.argwhere(df_paint[self.conciliation.col_bucket].isna()).flatten().tolist()
+                tbl.setRowColors(colored, clr=self._color_bucketed, cols="all")
+                tbl.setRowColors(not_colored, clr="", cols="all")   # Clear colors
+                # tbl.redraw()
                 # tbl.model.df = df_paint
                 # tbl.redraw()
 
@@ -397,9 +460,9 @@ class ConciliationApp(Frame):
         # dfs = [df[df[self.conciliation.col_cents] == sum_tbl] if key != data_type else
         #        self.tables[data_type].getSelectedRowData()
         #        for key, df in self.conciliation.dfs.items()]
-        dfs = [df[df[self.conciliation.col_cents].between(sum_tbl - offset, sum_tbl + offset)] if key != data_type else
+        dfs = {key: df[df[self.conciliation.col_cents].between(sum_tbl - offset, sum_tbl + offset)] if key != data_type else
                self.tables[data_type].getSelectedRowData()
-               for key, df in self.conciliation.dfs.items()]
+               for key, df in self.conciliation.dfs.items()}
         self.redraw_all_tables(dict_dfs=dfs)
 
     @check_missing_data
@@ -428,10 +491,10 @@ class ConciliationApp(Frame):
             self.redraw_all_tables()
 
 
-if __name__ == '__main__':
-    test_filename = "/Users/oneirag/Library/CloudStorage/OneDrive-Bibliotecascompartidas:onedrive/Documents/Evi/20230711_Punteo/BORRADOR LIQUIDACIONES JU_procesado.xlsx"
-    # app = ConciliationApp(test_filename)
-    app = ConciliationApp(None)
-    # app = MatchWindow(None, None)
-    # launch the app
+def main(initial_filename=None):
+    app = ConciliationApp(initial_filename)
     app.mainloop()
+
+
+if __name__ == '__main__':
+    main(None)

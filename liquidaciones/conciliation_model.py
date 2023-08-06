@@ -21,7 +21,8 @@ class Conciliation:
     _SHEET_INC = "ingresos"
     _SHEET_EXP = "gastos"
     # Columns of the sheets to read data from
-    _COLS_BNK = ['Concepto', 'Importe', 'CALLE']
+    # _COLS_BNK = ['Concepto', 'Importe', 'CALLE']
+    _COLS_BNK = ['Concepto', 'Importe']
     _COLS_INC = ['Piso/Local', 'Inquilino', 'Fecha', 'Cobrado', 'Pendiente', 'finca']
     _COLS_EXP = ['CONCEPTO', 'Pagos', 'Abonos', 'finca']
 
@@ -240,6 +241,31 @@ class Conciliation:
             self.df_expenses.loc[idx_expenses, self._COL_BUCKET] = id
         elif idx_incomes is not None:
             self.df_incomes.loc[idx_incomes, self._COL_BUCKET] = id
+
+    def clear_orphan_buckets(self):
+        """
+        Deletes any orphan bucket (a bucket that is not present in any other df)
+        Returns:
+        None
+        """
+        orphan_buckets = []
+        for df0 in self.dfs.values():
+            if df0 is None:
+                continue
+            buckets0 = set(df0[self.col_bucket].dropna().unique())
+            if not buckets0:
+                continue
+            for df1 in self.dfs.values():
+                if df1 is None or df1 is df0:
+                    continue
+                buckets1 = set(df1[self.col_bucket].dropna().unique())
+                # Remove buckets present in buckets0 and buckets1
+                buckets0 = buckets0.difference(buckets1)
+            if buckets0:
+                for b in buckets0:
+                    self.unbucket(int(b))
+
+
 
     def automatic_bucket_expenses(self, delta_cents: float = 1):
         """
