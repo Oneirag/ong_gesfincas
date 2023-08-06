@@ -8,7 +8,7 @@ from openpyxl import load_workbook
 
 def df_to_excel(df: pd.DataFrame, writer: pd.ExcelWriter, sheet_name: str, index=False, add_table: bool = True):
     """
-    Writes a df to an opened excel, fitting column with and adding Tables or activating autofilter
+    Writes a df to an opened Excel, fitting column with and adding Tables or activating autofilter
     Args:
         df: DataFrame to write
         writer: already opened excel writer
@@ -52,7 +52,7 @@ def df_to_excel(df: pd.DataFrame, writer: pd.ExcelWriter, sheet_name: str, index
 
 # Currently unused
 def read_excel_file(filename: str, sheet_name: str) -> pd.DataFrame:
-    """Reads excel file from a filename. If it fails, uses directly openpyxl to process file"""
+    """Reads Excel file from a filename. If it fails, uses directly openpyxl to process file"""
     try:
         retval = pd.read_excel(filename, sheet_name=sheet_name)
         return retval

@@ -114,6 +114,7 @@ class ConciliationApp(Frame):
         # Tables (bank, expenses, incomes)
         ###################################
         self.tables = {k: None for k in DataType}
+        self.visible_tables = {k: True for k in DataType}
         self.table_frames = {k: None for k in DataType}
         self.create_tables()
 
@@ -135,18 +136,19 @@ class ConciliationApp(Frame):
 
         # Second step: create Tables
         for row, data_type in enumerate(DataType):
-            self.table_frames[data_type] = f = Frame(self.main)
-            f.pack(fill=X, expand=1)
-            if (df := self.conciliation.dfs.get(data_type, None)) is not None:
-                table = ConciliationTable(f, dataframe=df, showstatusbar=True)
-                table.editable = False
-                table.show()
-                table.clearFormatting()
-                table.autoResizeColumns()
-                self.tables[data_type] = table
-            else:
-                lbl = Label(f, text=f"Por favor, cargue datos de {data_type.value} para mostrar los valores")
-                lbl.pack()
+            if self.visible_tables[data_type]:
+                self.table_frames[data_type] = f = Frame(self.main)
+                f.pack(fill=X, expand=1)
+                if (df := self.conciliation.dfs.get(data_type, None)) is not None:
+                    table = ConciliationTable(f, dataframe=df, showstatusbar=True)
+                    table.editable = False
+                    table.show()
+                    table.clearFormatting()
+                    table.autoResizeColumns()
+                    self.tables[data_type] = table
+                else:
+                    lbl = Label(f, text=f"Por favor, cargue datos de {data_type.value} para mostrar los valores")
+                    lbl.pack()
 
     def create_menu(self):
         main_menu = Menu(self)
@@ -163,7 +165,7 @@ class ConciliationApp(Frame):
         file_menu.add_separator()
 
         update_menu = Menu(file_menu, tearoff=False)
-        file_menu.add_cascade(label="Actualizar con datos nuevos", menu=load_menu)
+        file_menu.add_cascade(label="Actualizar con datos nuevos", menu=update_menu)
         update_menu.add_command(label="Fichero de gesfincas", command=lambda: self.handle_gesfincas(update=True))
         update_menu.add_command(label="Extracto del banco", command=lambda: self.handle_bank_data(update=True))
         update_menu.add_command(label="Excel completo", command=lambda: self.handle_read_excel(update=True))
@@ -185,9 +187,38 @@ class ConciliationApp(Frame):
                                 )
         main_menu.add_cascade(label="Conciliar", menu=bucket_menu)
 
+        view_menu = Menu(main_menu, tearoff=False)
+        view_menu.add_command(label="Aumentar zoom", command=self.handle_zoom_in)
+        view_menu.add_command(label="Disminuir zoom", command=self.handle_zoom_out)
+        view_menu.add_separator()
+        view_menu.add_command(label="Mostrar todos",
+                              command=lambda: self.handle_show_tables())
+        view_menu.add_command(label="Mostrar solo banco y gastos",
+                              command=lambda: self.handle_show_tables(incomes=False))
+        view_menu.add_command(label="Mostrar solo banco e ingresos",
+                              command=lambda: self.handle_show_tables(expenses=False))
+        main_menu.add_cascade(label="Ver", menu=view_menu)
+
         # view_menu = Menu(main_menu, tearoff=False)
         # view_menu.add_command(label="Redibujar las tablas", command=self.redraw_all_tables)
         # main_menu.add_cascade(label="Vista (pruebas)", menu=view_menu)
+
+    def handle_show_tables(self, bank: bool = True, expenses: bool = True, incomes: bool = True):
+        self.visible_tables[DataType.BNK] = bank
+        self.visible_tables[DataType.EXP] = expenses
+        self.visible_tables[DataType.INC] = incomes
+        self.create_tables()
+        self.redraw_all_tables()
+
+    def handle_zoom_in(self):
+        for table in self.tables.values():
+            if table is not None:
+                table.zoomIn()
+
+    def handle_zoom_out(self):
+        for table in self.tables.values():
+            if table is not None:
+                table.zoomOut()
 
     def load_or_update(self, df_dict: dict, update: bool):
         """
@@ -211,7 +242,7 @@ class ConciliationApp(Frame):
                 self.conciliation.update_dfs(df_dict)
             else:
                 messagebox.showinfo(message=f"No hay datos de {previous_data_str}, se cargarán nuevos sin actualizar")
-            self.conciliation.set_dfs(df_dict, read_buckets=False)
+                self.conciliation.set_dfs(df_dict, read_buckets=False)
         else:
             if previous_data:
                 if not messagebox.askyesno(message=f"Hay cargados datos de {previous_data_str}. "
@@ -233,7 +264,7 @@ class ConciliationApp(Frame):
                 self.load_or_update(df_dict, update)
         pass
 
-    def handle_gesfincas(self, update=False):
+    def handle_gesfincas(self, update: bool):
         gesfincas_file = ask_excel_filename()
         if gesfincas_file:
             df_expenses, df_incomes = read_gesfincas(gesfincas_file)
@@ -433,12 +464,25 @@ class ConciliationApp(Frame):
                 tbl.columnformats['alignment'][self.conciliation.col_bucket] = "e"
                 if auto_resize_cols:
                     tbl.autoResizeColumns()
+                # if self.visible_tables[data_type]:
+                #     self.table_frames[data_type].config(height="150")
+                #     self.table_frames[data_type].pack()
+                #     tbl.grid()
+                #     # tbl.grid()
+                #     #tbl.redraw()
+                # else:
+                #     self.table_frames[data_type].config(height="0")
+                #     self.table_frames[data_type].pack()
+                #     tbl.grid()
+                #     # tbl.grid_forget()
+                #     # tbl.redraw()
+                # tbl.itemconfigure(tbl.parentframe, state='hidden' if not self.visible_tables[data_type] else 'normal')
                 tbl.set_df_redraw(df_paint)
                 # Change color of the lines bucketed and reset color for the rest
                 colored = np.argwhere(~df_paint[self.conciliation.col_bucket].isna()).flatten().tolist()
                 not_colored = np.argwhere(df_paint[self.conciliation.col_bucket].isna()).flatten().tolist()
                 tbl.setRowColors(colored, clr=self._color_bucketed, cols="all")
-                tbl.setRowColors(not_colored, clr="", cols="all")   # Clear colors
+                tbl.setRowColors(not_colored, clr="", cols="all")  # Clear colors
                 # tbl.redraw()
                 # tbl.model.df = df_paint
                 # tbl.redraw()
@@ -460,8 +504,9 @@ class ConciliationApp(Frame):
         # dfs = [df[df[self.conciliation.col_cents] == sum_tbl] if key != data_type else
         #        self.tables[data_type].getSelectedRowData()
         #        for key, df in self.conciliation.dfs.items()]
-        dfs = {key: df[df[self.conciliation.col_cents].between(sum_tbl - offset, sum_tbl + offset)] if key != data_type else
-               self.tables[data_type].getSelectedRowData()
+        dfs = {key: df[
+            df[self.conciliation.col_cents].between(sum_tbl - offset, sum_tbl + offset)] if key != data_type else
+        self.tables[data_type].getSelectedRowData()
                for key, df in self.conciliation.dfs.items()}
         self.redraw_all_tables(dict_dfs=dfs)
 
@@ -470,7 +515,7 @@ class ConciliationApp(Frame):
         """Shows other rows that match the current selected rows, driven by the variable included in the radio button"""
         data_type = self.var_filter_by.get()
         data_type = DataType[data_type] if data_type else None
-        if data_type and self.tables[data_type].model.getRowCount() > 0:
+        if data_type and self.tables[data_type] is not None and self.tables[data_type].model.getRowCount() > 0:
             if ~(filter_df := self.tables[data_type].get_selected_or_all()).empty:
                 buckets = filter_df[self.conciliation.col_bucket]
                 # print(buckets)

@@ -152,23 +152,30 @@ class Conciliation:
         # Delete all buckets (needed if update of just some dfs and not all)
         for df in self.dfs.values():
             df.loc[:, self.col_bucket] = None
-        # merge all dfs
+        # First step: merge dfs from old_dfs with the new dfs from self.dfs
         merged_dict = dict()
         for (key, df_old), (key_new, df_new) in zip(old_dfs.items(), self.dfs.items()):
             assert key == key_new
-            df_old = df_old[~df_old[self.col_bucket].isna()]  # Remove not bucketed
+            # Remove not bucketed from old dfs
+            df_old = df_old[~df_old[self.col_bucket].isna()]
+            # Remove bucket column from new dfs (not needed as bucket from old_df will be used)
             df_new = df_new.drop(self.col_bucket, axis=1)
+            # merge on the common columns (those available both in new and old dfs)
             common_cols = df_old.columns.intersection(df_new.columns).to_list()
+            # Add indexes to columns "index_old" for df_old and "index_new" for df_new
             df_old.insert(len(df_old.columns), 'index_old', df_old.index)
             df_new.loc[:, 'index_new'] = df_new.index
+            # merge on the common_cols
             merged = pd.merge(df_old, df_new, left_on=common_cols, right_on=common_cols, how="left")
             merged_dict[key] = merged
-        # Now check old buckets to see if they can be applied to the new dfs
+        # Now check old buckets to see if they can be applied to the new dfs. The bank is used as the master for buckets
         for bucket in old_dfs[DataType.BNK][self.col_bucket].dropna().unique():
             kwargs = dict()
+            # arg_name is needed for self.bucket
             for key, arg_name in [(DataType.BNK, "idx_bank"), (DataType.EXP, "idx_expenses"),
                                   (DataType.INC, "idx_incomes")]:
                 merged = merged_dict[key]
+                # These are the common rows found in old_df and new_df (those in merged DataFrame)
                 bucket_merged = merged[merged[self.col_bucket] == bucket]
                 bucket_orig = old_dfs[key][old_dfs[key][self.col_bucket] == bucket]
                 # If there are missing rows in the merge or the number of rows in the merge is different from the
