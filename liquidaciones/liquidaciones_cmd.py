@@ -43,14 +43,23 @@ def read_gesfincas(gesfincas_file: str) -> tuple:
         for df, tipo in (df1, tipo1), (df2, tipo2):
             if tipo:
                 if tipo == "DETALLE DE INGRESOS (COBRO)":
+                    # If there are consecutive rows, fill them backwards
                     incomes.append(df)
+                    if df.iloc[1:, :2].isna().any().any():
+                        # Backfill cases where there are many nan values
+                        for row in range(1, df.shape[0]):
+                            if df.iloc[row, :2].isna().all():
+                                df.iloc[row, :2] = df.iloc[row - 1, :2]
+                            elif df.iloc[row, :2].isna().any():
+                                # print(df.iloc[row-1: row+1, :2])
+                                pass    # Do nothing: at least there is a non na value
                 elif tipo == "DETALLE DE GASTOS (PAGOS)":
                     expenses.append(df)
     if not expenses or not incomes:
         return None, None
-    df_gastos = pd.concat(expenses)
+    df_expenses = pd.concat(expenses)
     df_incomes = pd.concat(incomes)
-    return df_gastos, df_incomes
+    return df_expenses, df_incomes
 
 
 def main(in_file: str, out_file:str):

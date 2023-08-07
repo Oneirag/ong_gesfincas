@@ -1,14 +1,18 @@
 """
 Some test for conciliations
 """
+import os
 from unittest import TestCase, main
 from liquidaciones.conciliation_model import Conciliation
 from liquidaciones import DataType
 
 
 class TestConciliationUpdate(TestCase):
-    base_global_file = "ejemplo.xlsx"
-    test_global_file = "ejemplo_para_pruebas.xlsx"
+    base_global_file = os.path.join(os.path.dirname(__file__), "test_data", "ejemplo.xlsx")
+    test_global_file = os.path.join(os.path.dirname(__file__), "test_data", "ejemplo_para_pruebas.xlsx")
+    # TODO: Cleared files do not pass tests anymore...as test file must be created manually from initial one
+    base_global_file = os.path.join(os.path.dirname(__file__), "ejemplo.xlsx")
+    test_global_file = os.path.join(os.path.dirname(__file__), "ejemplo_para_pruebas.xlsx")
     all_bad_buckets = (
         0,  # Deleted row from expenses
         1,  # Modified cash value in bank (increased 1000€)

@@ -277,7 +277,8 @@ class ConciliationApp(Frame):
 
     @check_missing_data
     def handle_remove_orphan(self):
-        self.conciliation.clear_orphan_buckets()
+        orphans = self.conciliation.clear_orphan_buckets()
+        messagebox.showinfo(message=f"Se han borrado {len(orphans)} punteos huérfanos")
         self.redraw_all_tables()
         self.summary_refresh()
 

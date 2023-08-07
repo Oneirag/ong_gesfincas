@@ -252,11 +252,11 @@ class Conciliation:
         elif idx_incomes is not None:
             self.df_incomes.loc[idx_incomes, self._COL_BUCKET] = id
 
-    def clear_orphan_buckets(self):
+    def clear_orphan_buckets(self) -> list:
         """
         Deletes any orphan bucket (a bucket that is not present in any other df)
         Returns:
-        None
+        The list of the orphan buckets found
         """
         orphan_buckets = []
         for df0 in self.dfs.values():
@@ -273,7 +273,10 @@ class Conciliation:
                 buckets0 = buckets0.difference(buckets1)
             if buckets0:
                 for b in buckets0:
+                    orphan_buckets.append(int(b))
                     self.unbucket(int(b))
+        return orphan_buckets
+
 
     def automatic_bucket_expenses(self, delta_cents: float = 1):
         """
