@@ -211,6 +211,9 @@ class Conciliation:
         df_dict = self.read_dfs(filename)
         self.update_dfs(df_dict)
 
+    def unassigned(self, df_type: DataType):
+        return self.__unassigned_df(self.dfs[df_type])
+
     @property
     def unassigned_exp(self):
         return self.__unassigned_df(self.df_expenses)
@@ -272,8 +275,6 @@ class Conciliation:
                 for b in buckets0:
                     self.unbucket(int(b))
 
-
-
     def automatic_bucket_expenses(self, delta_cents: float = 1):
         """
         Buckets (assigns) automatically rows in the bank to rows in expenses, doing these steps:
@@ -289,20 +290,31 @@ class Conciliation:
         ###############################
         # Fist step: find exact match
         ###############################
-        for idx_bnk, row in self.df_bank.iterrows():
-            if not pd.isna(row[self._COL_BUCKET]):
-                continue
-            target = row[self._COL_CENTS]
-            found = self.unassigned_exp[self.unassigned_exp[self._COL_CENTS] == target]
-            if found.shape[0] == 1:
-                self.bucket(idx_bnk, idx_expenses=found.index.values)
-                continue
-            elif found.shape[0] > 1:
-                # If more than one is matched, match with the most similar one using "Concepto" column
-                matches = found['CONCEPTO'].apply(lambda x: SequenceMatcher(None, row['Concepto'].upper(),
-                                                                            x.upper()).ratio())
-                idx_max = matches.idxmax()
-                self.bucket(idx_bnk, idx_expenses=idx_max)
+        for df_type in (t for t in DataType if t != DataType.BNK):
+            for idx_bnk, row in self.df_bank.iterrows():
+                if not pd.isna(row[self._COL_BUCKET]):
+                    continue
+                target = row[self._COL_CENTS]
+                found = self.unassigned(df_type)[self.unassigned(df_type)[self._COL_CENTS] == target]
+                idx = None
+                if found.shape[0] == 1:
+                    idx = found.index.values
+                # If there are more than 1 posible rows, only find the best one in the case of expenses.
+                elif found.shape[0] > 1:
+                    # For incomes there are too many possibilities (e.g. many tenants with the same amount)
+                    if df_type == DataType.INC:
+                        # print(found)
+                        continue
+                    elif df_type == DataType.EXP:
+                        # If more than one is matched, match with the most similar one using "Concepto" column
+                        matches = found['CONCEPTO'].apply(lambda x: SequenceMatcher(None, row['Concepto'].upper(),
+                                                                                    x.upper()).ratio())
+                        idx = matches.idxmax()
+                if idx is not None:
+                    if df_type == DataType.EXP:
+                        self.bucket(idx_bnk, idx_expenses=idx)
+                    elif df_type == DataType.INC:
+                        self.bucket(idx_bnk, idx_incomes=idx)
 
         ########################################################
         # Second step: find approximate match (within +- delta)

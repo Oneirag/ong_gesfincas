@@ -5,7 +5,7 @@ with open('requirements.txt') as f:
 
 setup(
     name='ong_gesfincas',
-    version='0.0.1',
+    version='0.1.0',
     packages=['liquidaciones'],
     url='www.neirapinuela.es',
     license='',

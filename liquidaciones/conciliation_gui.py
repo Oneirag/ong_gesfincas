@@ -498,16 +498,22 @@ class ConciliationApp(Frame):
         if data_type is None:
             self.redraw_all_tables()
             return
-        sum_tbl = self.tables[data_type].getSelectedRowData()[self.conciliation.col_cents].sum()
+        selected_rows = self.tables[data_type].getSelectedRowData()
+        sum_tbl = selected_rows[self.conciliation.col_cents].sum()
         # filter rows to match sum of selected rows of given data_type
         offset = 2
-        # dfs = [df[df[self.conciliation.col_cents] == sum_tbl] if key != data_type else
-        #        self.tables[data_type].getSelectedRowData()
-        #        for key, df in self.conciliation.dfs.items()]
-        dfs = {key: df[
-            df[self.conciliation.col_cents].between(sum_tbl - offset, sum_tbl + offset)] if key != data_type else
-        self.tables[data_type].getSelectedRowData()
-               for key, df in self.conciliation.dfs.items()}
+        dfs = dict()
+        for key, df in self.conciliation.dfs.items():
+            # For the other tables, find those having a sum close to the sum of the selected rows
+            if key != data_type:
+                dfs[key] = df[df[self.conciliation.col_cents].between(sum_tbl - offset, sum_tbl + offset)]
+            else:
+                # For the current table, if more than 1 row is selected, keep current selection
+                if selected_rows.shape[0] > 1:
+                    dfs[key] = self.tables[data_type].getSelectedRowData()
+                else:
+                    # Otherwise, select all the rest that have exactly the same value
+                    dfs[key] = df[df[self.conciliation.col_cents] == sum_tbl]
         self.redraw_all_tables(dict_dfs=dfs)
 
     @check_missing_data
