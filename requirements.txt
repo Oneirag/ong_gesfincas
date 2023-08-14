@@ -2,4 +2,5 @@ numpy
 pandas
 openpyxl
 # pandastable
-git+https://github.com/Oneirag/pandastable.git      # My pandastable fork (until my pull request is accepted)
+# git+https://github.com/Oneirag/pandastable.git        # My pandastable fork (until my pull request is accepted)
+git+https://github.com/dmnfarrell/pandastable.git       # Accepted changes, so using main repo
