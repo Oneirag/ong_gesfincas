@@ -1,4 +1,5 @@
 import os
+
 import pandas as pd
 
 
@@ -78,7 +79,6 @@ def main(in_file: str, out_file:str):
 
 if __name__ == '__main__':
 
-    # path = "/Users/oneirag/Downloads/punteo"
     in_file = "VERSION CASI LIQUIDACIONES.xlsx"
     out_file = "salida.xlsx"
     in_file = input(f"Elija el fichero de entrada [{in_file}]: ") or in_file

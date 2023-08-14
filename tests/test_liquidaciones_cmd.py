@@ -1,11 +1,12 @@
 from unittest import TestCase
+
 from liquidaciones.liquidaciones_cmd import read_gesfincas
 
 
 class Test(TestCase):
 
     def setUp(self) -> None:
-        self.gesfincas_file = "borrador liquidaciones version 2.xlsx"
+        self.gesfincas_file = "../data/test_data/liquidaciones.xlsx"
         self.df_expenses, self.df_incomes = read_gesfincas(self.gesfincas_file)
 
     def test_read_gesfincas(self):

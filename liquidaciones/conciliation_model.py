@@ -2,11 +2,11 @@
 Functions to provide conciliation model. The process of matching a column is called "bucketing"
 """
 
-import pandas as pd
 from difflib import SequenceMatcher
 
-from liquidaciones import DataType
+import pandas as pd
 
+from liquidaciones import DataType
 from liquidaciones.openpyxl_helpers import df_to_excel
 
 
@@ -53,7 +53,7 @@ class Conciliation:
             self.read(filename)
 
     def __create_cents(self, df, col_cash_orig) -> pd.DataFrame:
-        """Creates a new column with the original cash orig converted to cents instead of euros"""
+        """Creates a new column with the original_data cash orig converted to cents instead of euros"""
         # df.loc[:, self._COL_CENTS] = (df[col_cash_orig] * 100).round(0).astype(int)
         if self.col_cents not in df.columns:  # Don't try to replicate column
             df.insert(len(df.columns), self.col_cents, (df[col_cash_orig].astype(float) * 100).round(0).astype(int))
@@ -179,7 +179,7 @@ class Conciliation:
                 bucket_merged = merged[merged[self.col_bucket] == bucket]
                 bucket_orig = old_dfs[key][old_dfs[key][self.col_bucket] == bucket]
                 # If there are missing rows in the merge or the number of rows in the merge is different from the
-                # original, then do not update bucket
+                # original_data, then do not update bucket
                 if bucket_merged['index_new'].isna().any() or \
                         bucket_merged.shape[0] != bucket_orig.shape[0]:
                     print(bucket)
@@ -466,13 +466,15 @@ class Conciliation:
 
 
 if __name__ == '__main__':
-    test_filename = "/Users/oneirag/Library/CloudStorage/OneDrive-Bibliotecascompartidas:onedrive/Documents/Evi/20230711_Punteo/BORRADOR LIQUIDACIONES JU_procesado.xlsx"
+    from tests.test_conciliation_model import TestConciliationUpdate
+
+    test_filename = "../data/test_data/global_test_data.xlsx"
     conciliation = Conciliation(test_filename)
     match = conciliation.main()
     conciliation.unbucket(0)
     # match.to_excel("output.xlsx", index=False)
     # conciliation.save_as("test_output.xlsx")
-    conciliation.read("/Users/oneirag/ejemplo.xlsx")
-    conciliation.update("/Users/oneirag/ejemplo_para_pruebas.xlsx")
+    conciliation.read(TestConciliationUpdate.base_global_file)
+    conciliation.update(TestConciliationUpdate.test_global_file)
 
     pass

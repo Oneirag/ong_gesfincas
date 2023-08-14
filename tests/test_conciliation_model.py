@@ -3,24 +3,24 @@ Some test for conciliations
 """
 import os
 from unittest import TestCase, main
-from liquidaciones.conciliation_model import Conciliation
+
 from liquidaciones import DataType
+from liquidaciones.conciliation_model import Conciliation
 
 
 class TestConciliationUpdate(TestCase):
-    base_global_file = os.path.join(os.path.dirname(__file__), "test_data", "ejemplo.xlsx")
-    test_global_file = os.path.join(os.path.dirname(__file__), "test_data", "ejemplo_para_pruebas.xlsx")
-    # TODO: Cleared files do not pass tests anymore...as test file must be created manually from initial one
-    base_global_file = os.path.join(os.path.dirname(__file__), "ejemplo.xlsx")
-    test_global_file = os.path.join(os.path.dirname(__file__), "ejemplo_para_pruebas.xlsx")
+    base_global_file = os.path.join(os.path.dirname(__file__), "../data/test_data", "global_test_data.xlsx")
+    test_global_file = os.path.join(os.path.dirname(__file__), "../data/test_data",
+                                    "global_test_data_changed.xlsx")
+    # These are the changes made in test_global_file
     all_bad_buckets = (
         0,  # Deleted row from expenses
         1,  # Modified cash value in bank (increased 1000€)
         2,  # Deleted row from bank
         3,  # Modified cash value in expenses (increased 1000€)
-        73, 74,  # This two rows have exactly the same values, cannot bucket them
-        220,  # Deleted row from bank (there are multiple rows)
-        210,  # Deleted row from expenses (there are two rows)
+        73, 74,  # These two rows are unchanged, but as they have exactly the same values, cannot bucket them
+        220,  # Deleted one row from bank (there are multiple rows)
+        210,  # Deleted one row from expenses (there are two rows)
     )
 
     def setUp(self) -> None:
@@ -78,7 +78,7 @@ class TestConciliationUpdate(TestCase):
                         "Bank df is not correctly updated")
 
     def test_update_bank_file(self):
-        """Test but reading all and updating only bank"""
+        """Test reading all from original_data and updating bank only"""
 
         new_bank = self.conciliation.read_bank(self.test_global_file)
         self.conciliation.update_dfs({DataType.BNK: new_bank})
@@ -109,7 +109,7 @@ class TestConciliationUpdate(TestCase):
             210,  # Deleted row from expenses (there are two rows)
         )
         self.conciliation.update(self.test_global_file)
-        self.__test_update(self.all_bad_buckets)
+        self.__test_update(bad_buckets)
 
 
 if __name__ == '__main__':
