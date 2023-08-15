@@ -1,12 +1,12 @@
 """
 Extends pandas table to have a custom toolbar (that sum selected value in cents)
 """
-from tkinter import Label, UNITS
+from tkinter import Label
 
 import pandas as pd
-from pandastable import Table
 
 from liquidaciones.conciliation_model import Conciliation
+from pandastable import Table
 
 
 class ConciliationTable(Table):
@@ -15,7 +15,6 @@ class ConciliationTable(Table):
         kwargs['showstatusbar'] = False
         Table.__init__(self, parent, **kwargs)
         self.statusbar = None
-        return
 
     def show(self, callback=None):
         """Adds a status bar for summarizing"""
@@ -33,7 +32,7 @@ class ConciliationTable(Table):
                 rows = pd.DataFrame()
             if not rows.empty:
                 total = rows[Conciliation.col_cents].sum() / 100
-                text = f"Suma de la selección: {total:.2f}€"
+                text = f"Suma de la selección: {total:,.2f}€"
             else:
                 text = "Nada seleccionado"
             self.statusbar.config(text=text)
@@ -102,12 +101,7 @@ class ConciliationTable(Table):
             self.selectNone()
             self.model.df = new_df
         else:
-            old_df = self.model.df
-            try:
-                old_selection = self.getSelectedRowData()
-            except Exception as e:
-                print(e)
-                old_selection = old_df
+            old_selection = self.get_selected_or_all()
             self.model.df = new_df
             new_selection = new_df.index.intersection(old_selection.index)
             if new_selection.empty:
@@ -125,4 +119,5 @@ class ConciliationTable(Table):
     def set_defaults(self):
         """Modified to make maxcellwidth wider"""
         Table.set_defaults(self)
-        self.maxcellwidth = 600     # Concepto column is too wide, so allow wider columns
+        self.maxcellwidth = 600  # Concepto column is too wide, so allow wider columns
+        self.thousandseparator = ","  # Default thousand separator... does not work :(

@@ -1,15 +1,16 @@
 import os
+import webbrowser
 from tkinter import *
 from tkinter import messagebox, filedialog
 
 import numpy as np
 import pandas as pd
-from pandastable import TableModel
 
 from liquidaciones import DataType
 from liquidaciones.conciliation_model import Conciliation
 from liquidaciones.conciliation_pandastable import ConciliationTable
 from liquidaciones.liquidaciones_cmd import read_gesfincas
+from pandastable import TableModel
 
 
 def ask_excel_filename(**kwargs):
@@ -41,6 +42,8 @@ class ConciliationApp(Frame):
     _show_unassigned = "no asignados"
     # Color of the rows of the bucketed values
     _color_bucketed = "lightgreen"
+    # Help url shows readme.md in GitHub
+    _help_url = "https://github.com/Oneirag/ong_gesfincas#readme"
 
     def __init__(self, filename, parent=None):
         self.conciliation = Conciliation(filename)
@@ -123,11 +126,25 @@ class ConciliationApp(Frame):
         self.create_menu()
         return
 
+    def handle_table_right_click(self, event):
+        """Filters by selection of table that rose the right click event"""
+        # finds which table rose the event
+        for data_type, table in self.tables.items():
+            if table is event.widget:
+                break
+
+        if self.var_filter_by.get() == "":
+            # currently, not filtered, filter by current table
+            self.var_filter_by.set(data_type.name)
+        else:  # Clear filter
+            self.var_filter_by.set("")
+        self.handle_filter_by()
+
     def create_tables(self):
         """Creates tables (or deletes them if found)"""
         # First step: delete all frames
         for k, f in self.table_frames.items():
-            if not f is None:
+            if f is not None:
                 for s in f.grid_slaves():
                     s.destroy()
                 self.tables[k] = None
@@ -142,10 +159,14 @@ class ConciliationApp(Frame):
                 if (df := self.conciliation.dfs.get(data_type, None)) is not None:
                     table = ConciliationTable(f, dataframe=df, showstatusbar=True)
                     table.editable = False
+
                     table.show()
                     table.clearFormatting()
                     table.autoResizeColumns()
                     self.tables[data_type] = table
+                    # if add="+", the event handle is added the previous ones, otherwise replaces the previous ones
+                    # table.bind("<Button-2>", self.handle_table_right_click, add="+")
+                    table.bind("<Button-2>", self.handle_table_right_click)
                 else:
                     lbl = Label(f, text=f"Por favor, cargue datos de {data_type.value} para mostrar los valores")
                     lbl.pack()
@@ -199,9 +220,16 @@ class ConciliationApp(Frame):
                               command=lambda: self.handle_show_tables(expenses=False))
         main_menu.add_cascade(label="Ver", menu=view_menu)
 
+        help_menu = Menu(main_menu, tearoff=False)
+        help_menu.add_command(label="Ayuda", command=self.handle_help)
+        main_menu.add_cascade(label="Ayuda", menu=help_menu)
+
         # view_menu = Menu(main_menu, tearoff=False)
         # view_menu.add_command(label="Redibujar las tablas", command=self.redraw_all_tables)
         # main_menu.add_cascade(label="Vista (pruebas)", menu=view_menu)
+
+    def handle_help(self):
+        webbrowser.open(self._help_url, new=0, autoraise=True)
 
     def handle_show_tables(self, bank: bool = True, expenses: bool = True, incomes: bool = True):
         self.visible_tables[DataType.BNK] = bank
@@ -360,7 +388,8 @@ class ConciliationApp(Frame):
             dif_bnk_exp = frmt(sum_cts(summary_dict['bnk_exp']) - sum_cts(summary_dict['exp_bnk']))
             dif_bnk_inc = frmt(sum_cts(summary_dict['bnk_inc']) - sum_cts(summary_dict['inc_bnk']))
 
-            txt += "\tAsignado: banco/ingresos {bnk_inc} (descuadre {dif_bnk_inc}) banco/gastos {bnk_exp} (descuadre {dif_bnk_exp})".format(
+            txt += ("\tAsignado: banco/ingresos {bnk_inc} (descuadre {dif_bnk_inc}) banco/gastos {bnk_exp} "
+                    "(descuadre {dif_bnk_exp})").format(
                 bnk_inc=sum_cts_str(summary_dict["bnk_inc"]), dif_bnk_inc=dif_bnk_inc,
                 bnk_exp=sum_cts_str(summary_dict["bnk_exp"]), dif_bnk_exp=dif_bnk_exp
             )
@@ -462,31 +491,16 @@ class ConciliationApp(Frame):
                         tbl.columnformats['alignment'][col] = "e"
                     # elif df[col].apply(lambda x: isinstance(x, str)).all():     # All column is text...
                     #     tbl.columnwidths[col] = max(tbl.columnwidths[col], df[col].str.len().max())
+                # colbucket is not found as numeric as might have None values
                 tbl.columnformats['alignment'][self.conciliation.col_bucket] = "e"
                 if auto_resize_cols:
                     tbl.autoResizeColumns()
-                # if self.visible_tables[data_type]:
-                #     self.table_frames[data_type].config(height="150")
-                #     self.table_frames[data_type].pack()
-                #     tbl.grid()
-                #     # tbl.grid()
-                #     #tbl.redraw()
-                # else:
-                #     self.table_frames[data_type].config(height="0")
-                #     self.table_frames[data_type].pack()
-                #     tbl.grid()
-                #     # tbl.grid_forget()
-                #     # tbl.redraw()
-                # tbl.itemconfigure(tbl.parentframe, state='hidden' if not self.visible_tables[data_type] else 'normal')
                 tbl.set_df_redraw(df_paint)
                 # Change color of the lines bucketed and reset color for the rest
                 colored = np.argwhere(~df_paint[self.conciliation.col_bucket].isna()).flatten().tolist()
                 not_colored = np.argwhere(df_paint[self.conciliation.col_bucket].isna()).flatten().tolist()
                 tbl.setRowColors(colored, clr=self._color_bucketed, cols="all")
                 tbl.setRowColors(not_colored, clr="", cols="all")  # Clear colors
-                # tbl.redraw()
-                # tbl.model.df = df_paint
-                # tbl.redraw()
 
     def filter_sum_df(self, data_type: DataType):
         """
