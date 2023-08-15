@@ -10,6 +10,16 @@ from liquidaciones import DataType
 from liquidaciones.openpyxl_helpers import df_to_excel
 
 
+class InvalidFileError(ValueError):
+    """Exception raised when file is invalid"""
+
+    def __init__(self, message: str, missing: list = None):
+        super().__init__(message)
+        self.missing = missing
+
+    pass
+
+
 class Conciliation:
     _COL_CASH_BANK = "Importe"
     _COL_CASH_INCOME = "Cobrado"
@@ -106,14 +116,21 @@ class Conciliation:
         return {k: df.copy(deep=True) for k, df in self.dfs.items()}
 
     def read_dfs(self, filename: str) -> dict:
-        """Reads dfs and return a dict of DataFrames indexed by DataType"""
+        """Reads dfs and return a dict of DataFrames indexed by DataType. Raises Inv"""
+
         with pd.ExcelFile(filename) as excel:
-            read_dfs = {
-                key: pd.read_excel(excel, sheet_name=sheet) for key, sheet in
-                {
-                    DataType.BNK: self._SHEET_BNK, DataType.INC: self._SHEET_INC, DataType.EXP: self._SHEET_EXP
-                }.items()
+            not_found = []
+            sheet_cfg = {
+                DataType.BNK: self._SHEET_BNK, DataType.INC: self._SHEET_INC, DataType.EXP: self._SHEET_EXP
             }
+
+            for sheet in sheet_cfg.values():
+                if sheet not in excel.sheet_names:
+                    not_found.append(sheet)
+            if not_found:
+                raise InvalidFileError("File does not contain all needed sheets: {}".format(", ".join(not_found)),
+                                       missing=not_found)
+            read_dfs = {key: pd.read_excel(excel, sheet_name=sheet) for key, sheet in sheet_cfg.items()}
         return read_dfs
 
     def read(self, filename: str, read_buckets=True):

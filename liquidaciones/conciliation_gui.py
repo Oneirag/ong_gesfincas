@@ -1,5 +1,6 @@
 import os
 import webbrowser
+from functools import partial
 from tkinter import *
 from tkinter import messagebox, filedialog
 
@@ -7,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 from liquidaciones import DataType
-from liquidaciones.conciliation_model import Conciliation
+from liquidaciones.conciliation_model import Conciliation, InvalidFileError
 from liquidaciones.conciliation_pandastable import ConciliationTable
 from liquidaciones.liquidaciones_cmd import read_gesfincas
 from pandastable import TableModel
@@ -170,6 +171,15 @@ class ConciliationApp(Frame):
                 else:
                     lbl = Label(f, text=f"Por favor, cargue datos de {data_type.value} para mostrar los valores")
                     lbl.pack()
+                    if data_type == DataType.BNK:
+                        command = partial(self.handle_bank_data, update=False)
+                    else:
+                        command = partial(self.handle_gesfincas, update=False)
+                    btn = Button(f, text=f"Cargar datos de {data_type.value}", command=command)
+                    btn.pack()
+                    btn = Button(f, text=f"Cargar datos completos",
+                                 command=lambda: self.handle_read_excel(update=False))
+                    btn.pack()
 
     def create_menu(self):
         main_menu = Menu(self)
@@ -327,17 +337,26 @@ class ConciliationApp(Frame):
     def handle_read_excel(self, update=False):
         file_path = ask_excel_filename()
         existing_data = self.conciliation.has_all_data
-        if file_path:
-            if update:
-                if existing_data:
-                    self.conciliation.read(file_path)
+        try:
+            if file_path:
+                if update:
+                    if existing_data:
+                        self.conciliation.read(file_path)
+                    else:
+                        self.conciliation.update(file_path)
                 else:
-                    self.conciliation.update(file_path)
-            else:
-                if existing_data:
-                    if not messagebox.askyesno(message="Ya hay datos cargados. ¿Desea continuar y perder los cambios?"):
-                        return
-                self.conciliation.read(file_path)
+                    if existing_data:
+                        if not messagebox.askyesno(
+                                message="Ya hay datos cargados. ¿Desea continuar y perder los cambios?"):
+                            return
+                    self.conciliation.read(file_path)
+        except InvalidFileError as ife:
+            messagebox.showinfo(message="El fichero indicado no contiene datos completos. Faltan {}".format(
+                ", ".join(ife.missing)))
+            return
+        except Exception as e:
+            messagebox.showerror(message="Error al abrir el fichero: {e}")
+
         self.create_tables()
         for key, table in self.tables.items():
             if table is not None:
