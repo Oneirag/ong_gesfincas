@@ -1,3 +1,4 @@
 [build-system]
+# setuptools is a default requirement, but pyshortcuts is needed to create shortcuts after install
 requires = ["setuptools", "pyshortcuts"]
 build-backend = "setuptools.build_meta"
