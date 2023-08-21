@@ -9,29 +9,12 @@ from setuptools.command.install_egg_info import install_egg_info
 from setuptools.command.install_lib import install_lib
 
 
-class PostInstallLib(install_lib):
-    def run(self) -> None:
-        super().run()
-        print("Post install lib")
-
-
-class PostInstallEggInfo(install_egg_info):
-    def run(self) -> None:
-        super().run()
-        print("post install egg info!")
-
-
-class PostInstall(install):
-    """Executes custom post_install function after standard install"""
-
-    def run(self):
-        print(self)
-        install.run(self)
-
+class InstallLogger:
+    def __init__(self, install_type: str):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
 
-        logging_file = os.path.expanduser(f'~/{self.distribution.metadata.name}-install.log')
+        logging_file = os.path.expanduser(f'~/{self.distribution.metadata.name}-{install_type}.log')
         # configure the handler and formatter for logger2
         handler2 = logging.FileHandler(logging_file, mode='w')
         formatter2 = logging.Formatter("%(name)s %(asctime)s %(levelname)s %(message)s")
@@ -41,8 +24,6 @@ class PostInstall(install):
         # add handler to the logger
         self.logger.addHandler(handler2)
         self.logger.debug(f"{logging_file=}")
-
-        self.post_install()
 
     def deep_log(self):
         # self.logger.debug(f"{self.install_lib=}")
@@ -57,9 +38,48 @@ class PostInstall(install):
         for p in dir(self):
             if ("install" in p) or (package_name in str(getattr(self, p))):
                 self.logger.debug(f"self.{p}={getattr(self, p)}")
-        for p, v in self.config_vars.items():
-            if ("install" in p) or (package_name in str(v)):
-                self.logger.debug(f"self.config_vars.{p}={v}")
+        if hasattr(self, "config_vars"):
+            for p, v in self.config_vars.items():
+                if ("install" in p) or (package_name in str(v)):
+                    self.logger.debug(f"self.config_vars.{p}={v}")
+
+
+class PostInstallLib(install_lib, InstallLogger):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        InstallLogger.__init__(self, "install_lib")
+
+    def run(self) -> None:
+        install_lib.run(self)
+        self.deep_log()
+        print("Post install lib")
+
+
+class PostInstallEggInfo(install_egg_info, InstallLogger):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        InstallLogger.__init__(self, "install_egg_info")
+
+    def run(self) -> None:
+        install_egg_info.run(self)
+        self.deep_log()
+        print("post install egg info!")
+
+
+class PostInstall(install, InstallLogger):
+    """Executes custom post_install function after standard install"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        InstallLogger.__init__(self, "install")
+
+    def run(self):
+        print(self)
+        install.run(self)
+        self.post_install()
+
 
     def post_install(self):
         """Creates a shortcut in desktop after install"""
