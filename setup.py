@@ -9,6 +9,7 @@ from setuptools.command.install import install
 
 class PostInstall(install):
     """Executes custon post_install function after standard install"""
+
     def run(self):
         print(self)
         install.run(self)
@@ -28,6 +29,23 @@ class PostInstall(install):
         self.logger.debug(f"{logging_file=}")
 
         self.post_install()
+
+    def deep_log(self):
+        # self.logger.debug(f"{self.install_lib=}")
+        # self.logger.debug(f"{self.install_base=}")
+        # self.logger.debug(f"{self.install_data=}")
+        # self.logger.debug(f"{self.install_libbase=}")
+        # self.logger.debug(f"{self.install_purelib=}")
+        # self.logger.debug(f"{self.install_purelib=}")
+        package = self.distribution.metadata.name
+        version = self.distribution.metadata.version
+        package_name = f"{package}-{version}"
+        for p in dir(self):
+            if ("install" in p) or (package_name in str(getattr(self, p))):
+                self.logger.debug(f"self.{p}={getattr(self, p)}")
+        for p, v in self.config_vars.items():
+            if ("install" in p) or (package_name in str(v)):
+                self.logger.debug(f"self.config_vars.{p}={v}")
 
     def post_install(self):
         """Creates a shortcut in desktop after install"""
@@ -51,6 +69,7 @@ class PostInstall(install):
         package = self.distribution.metadata.name
         version = self.distribution.metadata.version
         python_version = self.config_vars.get('py_version_short')
+        self.deep_log()
 
         for inst_type in "dist", "egg":
             install_path = "{lib_base}{package}-{version}{python_version_str}.{inst_type}-info".format(
