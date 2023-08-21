@@ -5,10 +5,24 @@ import os
 
 import setuptools
 from setuptools.command.install import install
+from setuptools.command.install_egg_info import install_egg_info
+from setuptools.command.install_lib import install_lib
+
+
+class PostInstallLib(install_lib):
+    def run(self) -> None:
+        super().run()
+        print("Post install lib")
+
+
+class PostInstallEggInfo(install_egg_info):
+    def run(self) -> None:
+        super().run()
+        print("post install egg info!")
 
 
 class PostInstall(install):
-    """Executes custon post_install function after standard install"""
+    """Executes custom post_install function after standard install"""
 
     def run(self):
         print(self)
