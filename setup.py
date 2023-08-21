@@ -49,7 +49,7 @@ class PostInstall(install):
                     record_file = os.path.join(install_path, "RECORD")
                     import hashlib
                     import base64
-                    sha256 = base64.urlsafe_b64encode(hashlib.sha256(scut_content.encode()).digest())
+                    sha256 = base64.urlsafe_b64encode(hashlib.sha256(scut_content.encode()).digest())[:-1]
                     with open(record_file, "a") as f:
                         f.writelines([f"{scut_filename},sha256={sha256},{len_scut}"])
                 elif inst_type == "egg":
