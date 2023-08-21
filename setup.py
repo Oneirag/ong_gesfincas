@@ -29,9 +29,6 @@ class PostInstall(install):
                               description="Lanzador de la interfaz del punteo de cuentas",
                               startmenu=False)
 
-        with open(scut_filename, "r") as f:
-            scut_content = f.read()
-            len_scut = len(scut_content)
         lib_base = self.install_lib
         package = self.distribution.metadata.name
         version = self.distribution.metadata.version
@@ -47,11 +44,19 @@ class PostInstall(install):
                     # Look for RECORD file and add shortcut info
                     # TODO: verify processing of RECORD file
                     record_file = os.path.join(install_path, "RECORD")
-                    import hashlib
-                    import base64
-                    sha256 = base64.urlsafe_b64encode(hashlib.sha256(scut_content.encode()).digest())[:-1]
-                    with open(record_file, "a") as f:
-                        f.writelines([f"{scut_filename},sha256={sha256},{len_scut}"])
+                    if os.path.isfile(record_file):
+                        with open(scut_filename, "r") as f:
+                            scut_content = f.read()
+                            len_scut = len(scut_content)
+                        import hashlib
+                        import base64
+                        sha256 = base64.urlsafe_b64encode(hashlib.sha256(scut_content.encode()).digest())[:-1]
+                        with open(record_file, "a") as f:
+                            f.writelines([f"{scut_filename},sha256={sha256},{len_scut}"])
+                    else:
+                        with open(record_file, "a") as f:
+                            f.writelines([f"{scut_filename}*,,"])
+
                 elif inst_type == "egg":
                     # add line to the (could be non-existing) file installed-files.txt
                     with open(os.path.join(install_path, "installed-files.txt"), "a") as f:
