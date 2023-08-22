@@ -8,8 +8,8 @@ import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.cell import Cell, MergedCell
 
-from liquidaciones.conciliation_model import Conciliation
-from liquidaciones.openpyxl_helpers import df_to_excel
+from ong_gesfincas.conciliation_model import Conciliation
+from ong_gesfincas.openpyxl_helpers import df_to_excel
 
 _DEBUG = False
 

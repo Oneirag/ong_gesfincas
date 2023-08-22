@@ -1,8 +1,8 @@
-import pandas as pd
 from tkinter import *
 from tkinter import filedialog
 from tkinter import messagebox as msg
-from liquidaciones.liquidaciones_cmd import main as main_liquidaciones
+
+from ong_gesfincas.liquidaciones_cmd import main as main_liquidaciones
 
 
 class LiquidacionesApp:

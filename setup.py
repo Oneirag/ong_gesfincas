@@ -6,7 +6,7 @@ with open('requirements.txt') as f:
 setup(
     name='ong_gesfincas',
     version='0.1.1',
-    packages=['liquidaciones'],
+    packages=['ong_gesfincas'],
     url='www.neirapinuela.es',
     license='',
     author='Oscar Neira',
@@ -16,8 +16,8 @@ setup(
                  'la que puntear los datos del banco contra los datos anteriores'),
     entry_points={
             'console_scripts': [
-                'liquidaciones=liquidaciones.liquidaciones_gui:main',
-                'punteo=liquidaciones.conciliation_gui:main',
+                'liquidaciones=ong_gesfincas.liquidaciones_gui:main',
+                'punteo=ong_gesfincas.conciliation_gui:main',
             ],
         },
     install_requires=required,

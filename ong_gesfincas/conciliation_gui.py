@@ -7,10 +7,10 @@ from tkinter import messagebox, filedialog
 import numpy as np
 import pandas as pd
 
-from liquidaciones import DataType
-from liquidaciones.conciliation_model import Conciliation, InvalidFileError
-from liquidaciones.conciliation_pandastable import ConciliationTable
-from liquidaciones.liquidaciones_cmd import read_gesfincas
+from ong_gesfincas import DataType
+from ong_gesfincas.conciliation_model import Conciliation, InvalidFileError
+from ong_gesfincas.conciliation_pandastable import ConciliationTable
+from ong_gesfincas.liquidaciones_cmd import read_gesfincas
 from pandastable import TableModel
 
 

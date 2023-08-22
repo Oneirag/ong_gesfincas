@@ -2,8 +2,8 @@
 Some helper functions to work with openpyxl: write tables, use autofilters, read_excel when it fails...
 """
 import pandas as pd
-from openpyxl.worksheet.table import TableStyleInfo, Table
 from openpyxl import load_workbook
+from openpyxl.worksheet.table import TableStyleInfo, Table
 
 
 def df_to_excel(df: pd.DataFrame, writer: pd.ExcelWriter, sheet_name: str, index=False, add_table: bool = True):

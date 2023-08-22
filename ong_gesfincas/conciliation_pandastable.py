@@ -5,7 +5,7 @@ from tkinter import Label
 
 import pandas as pd
 
-from liquidaciones.conciliation_model import Conciliation
+from ong_gesfincas.conciliation_model import Conciliation
 from pandastable import Table
 
 
