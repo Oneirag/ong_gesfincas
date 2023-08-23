@@ -1,7 +1,6 @@
 [project]
 name = "ong_gesfincas"
 version = "0.3.0"
-url = "www.neirapinuela.es"
 # license = {file = "LICENSE.txt"}
 authors = [
     { email = "oneirag@yahoo.es", name = "Oscar Neira" }
@@ -9,7 +8,6 @@ authors = [
 readme = "readme.md"
 requires-python = ">=3.8"
 description = "Herramienta gráfica para puntear datos del banco contra ficheros de gesfincas"
-repository = "https://github.com/Oneirag/ong_gesfincas"
 
 dependencies = [
     "numpy",
@@ -19,6 +17,10 @@ dependencies = [
     # "pandastable",
     "pandastable @ git+https://github.com/dmnfarrell/pandastable.git"       # Accepted changes, so using main repo
 ]
+
+[project.urls]  # Optional
+"Homepage" = "https://github.com/Oneirag/ong_gesfincas"
+"Source" = "https://github.com/Oneirag/ong_gesfincas"
 
 [build-system]
 requires = ["setuptools"]
