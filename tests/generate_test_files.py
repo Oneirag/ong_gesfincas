@@ -8,6 +8,7 @@ import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.cell import Cell, MergedCell
 
+from ong_gesfincas import get_data_path
 from ong_gesfincas.conciliation_model import Conciliation
 from ong_gesfincas.openpyxl_helpers import df_to_excel
 
@@ -190,7 +191,7 @@ class FilePrivateDataCleaner:
         new_filename = os.path.basename(filename).replace("_original", "")
         if suffix:
             new_filename = suffix.join(os.path.splitext(new_filename))
-        save_dir = os.path.join(os.path.dirname(__name__), "../data/test_data")
+        save_dir = os.path.join(os.path.dirname(__name__), "../src/ong_gesfincas/data/test_data")
         os.makedirs(save_dir, exist_ok=True)
         self.__new_filename = os.path.join(save_dir, new_filename)
         self.__sheet_names = self.__wb.sheetnames
@@ -397,7 +398,11 @@ class FilePrivateDataCleaner:
 
 
 if __name__ == '__main__':
-    FilePrivateDataCleaner("../data/original_data/global_test_data_original.xlsx").process_global_file()
-    FilePrivateDataCleaner("../data/original_data/liquidaciones_original.xlsx").process_accounting()
-    FilePrivateDataCleaner("../data/original_data/MovimientosCuenta 16.7.2023_original.xlsx").process_bank_extract()
-    FilePrivateDataCleaner("../data/test_data/global_test_data.xlsx", "_changed").generate_global_test_data()
+    FilePrivateDataCleaner(
+        get_data_path("original_data/global_test_data_original.xlsx")).process_global_file()
+    FilePrivateDataCleaner(
+        get_data_path("original_data/liquidaciones_original.xlsx")).process_accounting()
+    FilePrivateDataCleaner(
+        get_data_path("original_data/MovimientosCuenta 16.7.2023_original.xlsx")).process_bank_extract()
+    FilePrivateDataCleaner(get_data_path("test_data/global_test_data.xlsx"),
+                           "_changed").generate_global_test_data()

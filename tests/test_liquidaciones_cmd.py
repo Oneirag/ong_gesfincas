@@ -1,12 +1,13 @@
 from unittest import TestCase
 
+from ong_gesfincas import get_data_path
 from ong_gesfincas.liquidaciones_cmd import read_gesfincas
 
 
 class Test(TestCase):
 
     def setUp(self) -> None:
-        self.gesfincas_file = "../data/test_data/liquidaciones.xlsx"
+        self.gesfincas_file = get_data_path("original_data/liquidaciones_original.xlsx")
         self.df_expenses, self.df_incomes = read_gesfincas(self.gesfincas_file)
 
     def test_read_gesfincas(self):

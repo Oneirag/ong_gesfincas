@@ -1,11 +1,8 @@
 """
-Tests that console_scripts defined in setup.py work properly
-    entry_points={
-            'console_scripts': [
-                'ong_gesfincas=ong_gesfincas.liquidaciones_gui:main',
-                'punteo=ong_gesfincas.conciliation_gui:main',
-            ],
-        },
+Tests that console_scripts defined in pyproject.toml work properly
+[project.scripts]
+liquidaciones = "ong_gesfincas.liquidaciones_gui:main"
+punteo = "ong_gesfincas.conciliation_gui:main"
 """
 from unittest import TestCase, main
 
