@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import filedialog
 from tkinter import messagebox as msg
 
-from ong_gesfincas.liquidaciones_cmd import main as main_liquidaciones
+from src.ong_gesfincas.liquidaciones_cmd import main as main_liquidaciones
 
 
 class LiquidacionesApp:

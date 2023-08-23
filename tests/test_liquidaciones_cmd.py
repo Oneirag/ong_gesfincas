@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from ong_gesfincas.liquidaciones_cmd import read_gesfincas
+from src.ong_gesfincas import read_gesfincas
 
 
 class Test(TestCase):

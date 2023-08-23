@@ -1,0 +1,29 @@
+[project]
+name = "ong_gesfincas"
+version = "0.3.0"
+url = "www.neirapinuela.es"
+license = ""
+authors = [
+    { email = "oneirag@yahoo.es", name = "Oscar Neira" }
+]
+readme = "readme.md"
+requires-python = ">=3.8"
+description = "Herramienta gráfica para puntear datos del banco contra ficheros de gesfincas"
+repository = "https://github.com/Oneirag/ong_gesfincas"
+
+dependencies = [
+    "numpy",
+    "pandas",
+    "openpyxl",
+    # Pandastable is still not updated in pypi, so using git repo that includes my PR
+    # "pandastable",
+    "pandastable @ git+https://github.com/dmnfarrell/pandastable.git"       # Accepted changes, so using main repo
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project.scripts]
+liquidaciones = "ong_gesfincas.liquidaciones_gui:main"
+punteo = "ong_gesfincas.conciliation_gui:main"

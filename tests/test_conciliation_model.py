@@ -4,8 +4,8 @@ Some test for conciliations
 import os
 from unittest import TestCase, main
 
-from ong_gesfincas import DataType
-from ong_gesfincas.conciliation_model import Conciliation
+from src.ong_gesfincas import DataType
+from src.ong_gesfincas.conciliation_model import Conciliation
 
 
 class TestConciliationUpdate(TestCase):
