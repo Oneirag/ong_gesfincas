@@ -18,6 +18,12 @@ dependencies = [
     "pandastable @ git+https://github.com/dmnfarrell/pandastable.git"       # Accepted changes, so using main repo
 ]
 
+[tool.setuptools.packages.find]
+# scanning for namespace packages is true by default in pyproject.toml, so
+# you do NOT need to include the following line.
+namespaces = true
+where = ["src"]
+
 [tool.setuptools.package-data]
 # Add Excel files in data folder
 "ong_gesfincas.data" = ["*.xlsx"]
