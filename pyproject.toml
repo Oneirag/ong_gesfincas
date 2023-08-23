@@ -2,7 +2,7 @@
 name = "ong_gesfincas"
 version = "0.3.0"
 url = "www.neirapinuela.es"
-license = ""
+# license = {file = "LICENSE.txt"}
 authors = [
     { email = "oneirag@yahoo.es", name = "Oscar Neira" }
 ]
