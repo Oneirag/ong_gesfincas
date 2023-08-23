@@ -18,6 +18,10 @@ dependencies = [
     "pandastable @ git+https://github.com/dmnfarrell/pandastable.git"       # Accepted changes, so using main repo
 ]
 
+[tool.setuptools.package-data]
+# Add Excel files in data folder
+"ong_gesfincas.data" = ["*.xlsx"]
+
 [project.urls]  # Optional
 "Homepage" = "https://github.com/Oneirag/ong_gesfincas"
 "Source" = "https://github.com/Oneirag/ong_gesfincas"

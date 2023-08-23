@@ -7,11 +7,11 @@ from tkinter import messagebox, filedialog
 import numpy as np
 import pandas as pd
 
+from ong_gesfincas import DataType
+from ong_gesfincas.conciliation_model import Conciliation, InvalidFileError
+from ong_gesfincas.conciliation_pandastable import ConciliationTable
+from ong_gesfincas.liquidaciones_cmd import read_gesfincas
 from pandastable import TableModel
-from src.ong_gesfincas import DataType
-from src.ong_gesfincas.conciliation_model import Conciliation, InvalidFileError
-from src.ong_gesfincas.conciliation_pandastable import ConciliationTable
-from src.ong_gesfincas.liquidaciones_cmd import read_gesfincas
 
 
 def ask_excel_filename(**kwargs):

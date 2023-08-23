@@ -5,8 +5,8 @@ from tkinter import Label
 
 import pandas as pd
 
+from ong_gesfincas.conciliation_model import Conciliation
 from pandastable import Table
-from src.ong_gesfincas.conciliation_model import Conciliation
 
 
 class ConciliationTable(Table):

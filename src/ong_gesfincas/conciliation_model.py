@@ -6,8 +6,8 @@ from difflib import SequenceMatcher
 
 import pandas as pd
 
-from src.ong_gesfincas import DataType
-from src.ong_gesfincas.openpyxl_helpers import df_to_excel
+from ong_gesfincas import DataType
+from ong_gesfincas.openpyxl_helpers import df_to_excel
 
 
 class InvalidFileError(ValueError):

@@ -6,8 +6,8 @@ punteo = "ong_gesfincas.conciliation_gui:main"
 """
 from unittest import TestCase, main
 
-from src.ong_gesfincas.conciliation_gui import main as punteo
-from src.ong_gesfincas.liquidaciones_gui import main as liquidaciones
+from ong_gesfincas.conciliation_gui import main as punteo
+from ong_gesfincas.liquidaciones_gui import main as liquidaciones
 
 
 class TestConsole(TestCase):

@@ -4,14 +4,13 @@ Some test for conciliations
 import os
 from unittest import TestCase, main
 
-from src.ong_gesfincas import DataType
-from src.ong_gesfincas.conciliation_model import Conciliation
+from ong_gesfincas import DataType, get_data_path
+from ong_gesfincas.conciliation_model import Conciliation
 
 
 class TestConciliationUpdate(TestCase):
-    base_global_file = os.path.join(os.path.dirname(__file__), "../data/test_data", "global_test_data.xlsx")
-    test_global_file = os.path.join(os.path.dirname(__file__), "../data/test_data",
-                                    "global_test_data_changed.xlsx")
+    base_global_file = os.path.join(get_data_path("test_data"), "global_test_data.xlsx")
+    test_global_file = os.path.join(get_data_path("test_data"), "global_test_data_changed.xlsx")
     # These are the changes made in test_global_file
     all_bad_buckets = (
         0,  # Deleted row from expenses
