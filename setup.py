@@ -4,10 +4,142 @@ import logging
 import os
 
 import setuptools
+from setuptools.command.build_py import build_py
+from setuptools.command.dist_info import dist_info
+from setuptools.command.egg_info import egg_info
 from setuptools.command.install import install
 from setuptools.command.install_egg_info import install_egg_info
 from setuptools.command.install_lib import install_lib
+from setuptools.command.sdist import sdist
+from wheel.bdist_wheel import bdist_wheel
 
+
+class CustomBdistWheel(bdist_wheel):
+    def run(self):
+        bdist_wheel.run(self)
+        # Look for the wheel and change RECORD file
+        impl_tag, abi_tag, plat_tag = self.get_tag()
+        archive_basename = f"{self.wheel_dist_name}-{impl_tag}-{abi_tag}-{plat_tag}"
+        wheel_path = os.path.join(self.dist_dir, archive_basename + ".whl")
+        # Open wheel and edit RECORD file
+        import zipfile
+        # generate a temp file
+        tmpfd, tmpname = tempfile.mkstemp(dir=os.path.dirname(wheel_path))
+        os.close(tmpfd)
+        # create a temp copy of the archive without filename
+        with zipfile.ZipFile(wheel_path, 'r') as zin:
+            with zipfile.ZipFile(tmpname, 'w') as zout:
+                zout.comment = zin.comment  # preserve the comment
+                for item in zin.infolist():
+                    if not item.filename.endswith("RECORD"):
+                        zout.writestr(item, zin.read(item.filename))
+                    else:
+                        # Write custom record file here
+                        data = zin.read(item.filename)
+                        data += "/Users/oneirag/Desktop/Punteo de cuentas.app,,\n".encode("utf-8")
+                        zout.writestr(item, data)
+        # replace with the temp archive
+        os.remove(wheel_path)
+        os.rename(tmpname, wheel_path)
+        pass
+
+
+class CustomDistInfo(dist_info):
+    def run(self) -> None:
+        dist_info.run(self)
+        pass
+
+
+class CustomBuildPy(build_py):
+
+    def run(self) -> None:
+        build_py.run(self)
+        pass
+
+
+import tarfile
+import tempfile
+import io
+
+
+class CustomEggInfo(egg_info):
+
+    def find_sources(self) -> None:
+        # Add my custom installed-files.txt here
+        # Create the installed-files.txt
+        with open(os.path.join(self.egg_info, "installed-files.txt"), "w") as f:
+            f.write("/Users/oneirag/Desktop/Punteo de cuentas.app\n")
+        egg_info.find_sources(self)
+
+
+def append_tar_file(buf, file_name, output_path, replace=True):
+    """
+    append a buf to an existing tar file if not already there, or if replace=True
+    """
+    if not os.path.isfile(output_path):
+        return
+
+    with tempfile.TemporaryDirectory() as tempdir:
+        tmp_path = os.path.join(tempdir, 'tmp.tar.gz')
+
+        with tarfile.open(output_path, "r:gz") as tar:
+            if not replace:
+                if file_name in (member.name for member in tar):
+                    return
+
+            if isinstance(buf, str):
+                buf = buf.encode("utf-8")
+
+            fileobj = io.BytesIO(buf)
+            tarinfo = tarfile.TarInfo(file_name)
+            tarinfo.size = len(fileobj.getvalue())
+
+            with tarfile.open(tmp_path, "w:gz") as tmp:
+                for member in tar:
+                    if member.name != file_name:
+                        tmp.addfile(member, tar.extractfile(member.name))
+                tmp.addfile(tarinfo, fileobj)
+
+        os.rename(tmp_path, output_path)
+
+
+class CustomSdist(sdist):
+
+    def make_distribution(self) -> None:
+        package = self.distribution.get_name()
+        package_name = self.distribution.get_fullname()
+        egg_info_dir = f"{package}.egg-info/"
+        self.mkpath(egg_info_dir)
+        # Create the installed-files.txt
+        with open(os.path.join(egg_info_dir, "installed-files.txt")) as f:
+            f.write("/Users/oneirag/Desktop/Punteo de cuentas.app\n")
+        sdist.make_distribution(self)
+        pass
+
+    def run(self) -> None:
+        sdist.run(self)
+        return
+        package = self.distribution.get_name()
+        package_name = self.distribution.get_fullname()
+
+        old_targz_file = self.distribution.dist_files[-1][-1]
+        append_tar_file(buf='/Users/oneirag/Desktop/Punteo de cuentas.app\n',
+                        file_name=f"{package_name}/{package}.egg-info/installed-files.txt",
+                        output_path=old_targz_file)
+        return
+
+        import tarfile
+
+        new_targz_file = "dist/new.tar.gz"
+        data = '/Users/oneirag/Desktop/Punteo de cuentas.app\n'.encode('utf8')
+        info = tarfile.TarInfo(name='installed-files.txt')
+        info.size = len(data)
+        with tarfile.open(new_targz_file, "w:gz") as new_tar:
+            with tarfile.open(old_targz_file, 'r:gz') as old_tar:
+                for tarinfo in old_tar:
+                    new_tar.addfile(tarinfo)
+            # new_tar.addfile(info, io.BytesIO(data))
+        pass
 
 class InstallLogger:
     def __init__(self, install_type: str):
