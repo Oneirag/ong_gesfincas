@@ -15,7 +15,8 @@ dependencies = [
     "openpyxl",
     # Pandastable is still not updated in pypi, so using git repo that includes my PR
     # "pandastable",
-    "pandastable @ git+https://github.com/dmnfarrell/pandastable.git"       # Accepted changes, so using main repo
+    "pandastable @ git+https://github.com/dmnfarrell/pandastable.git", # Accepted changes, so using main repo
+    "ong_utils @ git+https://github.com/Oneirag/ong_utils@feature/shortcuts"
 ]
 
 [tool.setuptools.packages.find]
@@ -27,15 +28,23 @@ where = ["src"]
 [tool.setuptools.package-data]
 # Add Excel files in data folder
 "ong_gesfincas.data" = ["*.xlsx"]
+"ong_gesfincas.icons" = ["*.png", "*.icns"]
 
 [project.urls]  # Optional
 "Homepage" = "https://github.com/Oneirag/ong_gesfincas"
 "Source" = "https://github.com/Oneirag/ong_gesfincas"
 
 [build-system]
-requires = ["setuptools"]
+requires = [
+    "setuptools",
+    "wheel",
+    "ong_utils @ git+https://github.com/Oneirag/ong_utils@feature/shortcuts"
+]
+
 build-backend = "setuptools.build_meta"
 
 [project.scripts]
-liquidaciones = "ong_gesfincas.liquidaciones_gui:main"
+# Not needed anymore
+# liquidaciones = "ong_gesfincas.liquidaciones_gui:main"
 punteo = "ong_gesfincas.conciliation_gui:main"
+ong_gesfincas_post_install = "ong_gesfincas.post_install:main"
