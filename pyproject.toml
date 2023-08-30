@@ -47,4 +47,3 @@ build-backend = "setuptools.build_meta"
 # Not needed anymore
 # liquidaciones = "ong_gesfincas.liquidaciones_gui:main"
 punteo = "ong_gesfincas.conciliation_gui:main"
-ong_gesfincas_post_install = "ong_gesfincas.post_install:main"
