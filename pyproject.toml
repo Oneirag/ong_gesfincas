@@ -16,7 +16,8 @@ dependencies = [
     # Pandastable is still not updated in pypi, so using git repo that includes my PR
     # "pandastable",
     "pandastable @ git+https://github.com/dmnfarrell/pandastable.git", # Accepted changes, so using main repo
-    "ong_utils @ git+https://github.com/Oneirag/ong_utils@feature/shortcuts"
+    # Post install script won't be needed in this case
+    # "ong_utils @ git+https://github.com/Oneirag/ong_utils@feature/shortcuts"
 ]
 
 [tool.setuptools.packages.find]
