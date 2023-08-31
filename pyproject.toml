@@ -39,7 +39,7 @@ where = ["src"]
 requires = [
     "setuptools",
     "wheel",
-    "ong_utils @ git+https://github.com/Oneirag/ong_utils@feature/shortcuts"
+    "ong_utils @ git+https://github.com/Oneirag/ong_utils"
 ]
 
 build-backend = "setuptools.build_meta"
