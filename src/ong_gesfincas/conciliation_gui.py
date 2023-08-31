@@ -1,11 +1,11 @@
-import os
-import webbrowser
-from functools import partial
 from tkinter import *
 from tkinter import messagebox, filedialog
 
 import numpy as np
+import os
 import pandas as pd
+import webbrowser
+from functools import partial
 
 from ong_gesfincas import DataType
 from ong_gesfincas.conciliation_model import Conciliation, InvalidFileError
@@ -43,7 +43,7 @@ class ConciliationApp(Frame):
     _show_unassigned = "no asignados"
     # Color of the rows of the bucketed values
     _color_bucketed = "lightgreen"
-    # Help url shows readme.md in GitHub
+    # Help url shows README.md in GitHub
     _help_url = "https://github.com/Oneirag/ong_gesfincas#readme"
 
     def __init__(self, filename, parent=None):
