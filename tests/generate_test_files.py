@@ -10,7 +10,7 @@ from openpyxl.cell import Cell, MergedCell
 
 from ong_gesfincas import get_data_path
 from ong_gesfincas.conciliation_model import Conciliation
-from ong_gesfincas.openpyxl_helpers import df_to_excel
+from ong_utils.excel import df_to_excel
 
 _DEBUG = False
 
