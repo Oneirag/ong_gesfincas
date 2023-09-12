@@ -66,7 +66,8 @@ class Conciliation:
         """Creates a new column with the original_data cash orig converted to cents instead of euros"""
         # df.loc[:, self._COL_CENTS] = (df[col_cash_orig] * 100).round(0).astype(int)
         if self.col_cents not in df.columns:  # Don't try to replicate column
-            df.insert(len(df.columns), self.col_cents, (df[col_cash_orig].astype(float) * 100).round(0).astype(int))
+            df.insert(len(df.columns), self.col_cents,
+                      (df[col_cash_orig].fillna(0).astype(float) * 100).round(0).astype(int))
         return df
 
     def __unassigned_df(self, df):
