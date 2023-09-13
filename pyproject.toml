@@ -17,7 +17,7 @@ dependencies = [
     # "pandastable",
     "pandastable @ git+https://github.com/dmnfarrell/pandastable.git", # Accepted changes, so using main repo
     # Post install script won't be needed in this case
-    # "ong_utils @ git+https://github.com/Oneirag/ong_utils@feature/shortcuts"
+    # "ong_utils @ git+https://github.com/Oneirag/ong_utils"
 ]
 
 [tool.setuptools.packages.find]
@@ -39,7 +39,7 @@ where = ["src"]
 requires = [
     "setuptools",
     "wheel",
-    "ong_utils @ git+https://github.com/Oneirag/ong_utils@feature/shortcuts"
+    "ong_utils @ git+https://github.com/Oneirag/ong_utils"
 ]
 
 build-backend = "setuptools.build_meta"
