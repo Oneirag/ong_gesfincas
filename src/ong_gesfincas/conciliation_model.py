@@ -150,7 +150,7 @@ class Conciliation:
         self.set_dfs(read_dfs, read_buckets)
 
     def read_gesfincas(self, gesfincas_filename: str) -> dict:
-        df_expenses, df_incomes = read_gesfincas(gesfincas_file)
+        df_expenses, df_incomes = read_gesfincas(gesfincas_filename)
         if df_expenses is None or df_incomes is None:
             return dict()
         else:
