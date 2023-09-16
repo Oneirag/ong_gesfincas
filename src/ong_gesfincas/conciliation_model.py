@@ -7,7 +7,8 @@ from difflib import SequenceMatcher
 import pandas as pd
 
 from ong_gesfincas import DataType
-from ong_gesfincas.openpyxl_helpers import df_to_excel
+from ong_gesfincas.liquidaciones_cmd import read_gesfincas
+from ong_utils.excel import df_to_excel
 
 
 class InvalidFileError(ValueError):
@@ -148,8 +149,16 @@ class Conciliation:
         read_dfs = self.read_dfs(filename)
         self.set_dfs(read_dfs, read_buckets)
 
-    def read_bank(self, bank_filename: str) -> pd.DataFrame | None:
-        """Reads bank data as a df from the first sheet of the given Excel file. Returns None if file is invalid"""
+    def read_gesfincas(self, gesfincas_filename: str) -> dict:
+        df_expenses, df_incomes = read_gesfincas(gesfincas_file)
+        if df_expenses is None or df_incomes is None:
+            return dict()
+        else:
+            return {DataType.INC: df_incomes, DataType.EXP: df_expenses}
+
+    def read_bank(self, bank_filename: str) -> dict:
+        """Reads bank data as returns as a df that can be feed to update_dfs from the first sheet of the given Excel
+        file. Returns empty dict if file is invalid"""
         df = pd.read_excel(bank_filename, header=None)
         header_rows = (0, 7)  # Potential rows containing header data
         for header_row in header_rows:
@@ -160,8 +169,8 @@ class Conciliation:
                 df_bank = df_bank[~df_bank[self._COL_CASH_BANK].isna()]  # Remove nan values
                 df_bank.index = range(df_bank.shape[0])
                 df_bank = df_bank[self._COLS_BNK]
-                return df_bank
-        return None
+                return {DataType.BNK: df_bank}
+        return dict()
 
     def update_dfs(self, df_dict: dict):
         # TODO: Fix the case when two (or more) rows EXACTLY EQUAL in bank and expenses, as it cannot reassign
@@ -294,7 +303,6 @@ class Conciliation:
                     orphan_buckets.append(int(b))
                     self.unbucket(int(b))
         return orphan_buckets
-
 
     def automatic_bucket_expenses(self, delta_cents: float = 1):
         """

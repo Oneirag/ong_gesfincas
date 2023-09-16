@@ -1,16 +1,15 @@
+import os
+import webbrowser
+from functools import partial
 from tkinter import *
 from tkinter import messagebox, filedialog
 
 import numpy as np
-import os
 import pandas as pd
-import webbrowser
-from functools import partial
 
 from ong_gesfincas import DataType
 from ong_gesfincas.conciliation_model import Conciliation, InvalidFileError
 from ong_gesfincas.conciliation_pandastable import ConciliationTable
-from ong_gesfincas.liquidaciones_cmd import read_gesfincas
 from pandastable import TableModel
 
 
@@ -294,24 +293,22 @@ class ConciliationApp(Frame):
     def handle_bank_data(self, update=False):
         bank_file = ask_excel_filename()
         if bank_file:
-            df_bank = self.conciliation.read_bank(bank_file)
-            if df_bank is None:
+            dict_bank = self.conciliation.read_bank(bank_file)
+            if not dict_bank:
                 messagebox.showerror(message="El fichero seleccionado no tiene datos del banco en su primera hoja")
             else:
-                df_dict = {DataType.BNK: df_bank}
-                self.load_or_update(df_dict, update)
+                self.load_or_update(dict_bank, update)
         pass
 
     def handle_gesfincas(self, update: bool):
         gesfincas_file = ask_excel_filename()
         if gesfincas_file:
-            df_expenses, df_incomes = read_gesfincas(gesfincas_file)
-            if df_expenses is None or df_incomes is None:
+            dict_gesfincas = self.conciliation.read_gesfincas(gesfincas_file)
+            if not dict_gesfincas:
                 messagebox.showerror(message="El fichero seleccionado no tiene datos de gesfincas")
                 return
             # Now set both df to current conciliation
-            dict_df = {DataType.INC: df_incomes, DataType.EXP: df_expenses}
-            self.load_or_update(dict_df, update)
+            self.load_or_update(dict_gesfincas, update)
 
     @check_missing_data
     def handle_remove_orphan(self):

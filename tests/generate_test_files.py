@@ -10,7 +10,7 @@ from openpyxl.cell import Cell, MergedCell
 
 from ong_gesfincas import get_data_path
 from ong_gesfincas.conciliation_model import Conciliation
-from ong_gesfincas.openpyxl_helpers import df_to_excel
+from ong_utils.excel import df_to_excel
 
 _DEBUG = False
 
@@ -398,11 +398,16 @@ class FilePrivateDataCleaner:
 
 
 if __name__ == '__main__':
-    FilePrivateDataCleaner(
-        get_data_path("original_data/global_test_data_original.xlsx")).process_global_file()
-    FilePrivateDataCleaner(
-        get_data_path("original_data/liquidaciones_original.xlsx")).process_accounting()
-    FilePrivateDataCleaner(
-        get_data_path("original_data/MovimientosCuenta 16.7.2023_original.xlsx")).process_bank_extract()
-    FilePrivateDataCleaner(get_data_path("test_data/global_test_data.xlsx"),
-                           "_changed").generate_global_test_data()
+    original_file_path = "original_data"
+    for f in os.listdir(get_data_path(original_file_path)):
+        if not f.endswith(".xlsx"):
+            continue
+        filename = os.path.join(original_file_path, f)
+        if "LIQUIDACIONES" in f.upper():
+            FilePrivateDataCleaner(get_data_path(filename)).process_accounting()
+        elif "MOVIMIENTOSCUENTA" in f.upper():
+            FilePrivateDataCleaner(get_data_path(filename)).process_bank_extract()
+        else:
+            FilePrivateDataCleaner(get_data_path(filename)).process_global_file()
+            FilePrivateDataCleaner(get_data_path(os.path.join("test_data", f)),
+                                   "_changed").generate_global_test_data()
