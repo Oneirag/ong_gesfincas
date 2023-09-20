@@ -58,8 +58,8 @@ def read_gesfincas(gesfincas_file: str) -> tuple:
                     expenses.append(df)
     if not expenses or not incomes:
         return None, None
-    df_expenses = pd.concat(expenses)
-    df_incomes = pd.concat(incomes)
+    df_expenses = pd.concat(expenses, ignore_index=True)
+    df_incomes = pd.concat(incomes, ignore_index=True)
     return df_expenses, df_incomes
 
 
